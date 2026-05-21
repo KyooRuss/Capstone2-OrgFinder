@@ -1,0 +1,125 @@
+/* ── Reset ── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(90deg, #1a2e78 0%, #3549d6 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ────────────────────────────────────────────
+   CENTER WRAPPER
+──────────────────────────────────────────── */
+.center-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ────────────────────────────────────────────
+   LOGIN CARD
+──────────────────────────────────────────── */
+.card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* ────────────────────────────────────────────
+   BRAND
+──────────────────────────────────────────── */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 6px;
+    justify-content: center;
+}
+
+.brand-name {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 5px;
+    color: #1e2f6e;
+    line-height: 1;
+}
+
+.brand-sub {
+    text-align: center;
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 28px;
+}
+
+/* ────────────────────────────────────────────
+   FORM FIELDS
+──────────────────────────────────────────── */
+.field {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.field-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 15px;
+}
+
+.field input {
+    width: 100%;
+    padding: 12px 14px 12px 40px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    background: #f9f9f9;
+    outline: none;
+    transition: border-color .2s;
+}
+.field input:focus        { border-color: #6F8FE6; background: #fff; }
+.field input::placeholder { color: #bbb; }
+
+/* ────────────────────────────────────────────
+   FORGOT PASSWORD
+──────────────────────────────────────────── */
+.forgot { text-align: right; margin-bottom: 20px; }
+.forgot a { font-size: 12px; color: #2F4FB5; text-decoration: none; }
+
+/* ────────────────────────────────────────────
+   LOGIN BUTTON
+──────────────────────────────────────────── */
+.btn-login {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, #4A6CF7 0%, #2346D4 100%);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+}
+.btn-login:hover { opacity: .88; }
+
+/* ────────────────────────────────────────────
+   ERROR MESSAGE
+──────────────────────────────────────────── */
+.error-msg {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+}

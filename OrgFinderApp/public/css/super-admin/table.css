@@ -1,0 +1,69 @@
+/* ==============================================
+   TOOLBAR
+   ============================================== */
+.toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.toolbar-left { flex: 1; font-size: 15px; font-weight: 700; color: #1e2f6e; }
+
+/* Search box */
+.search-box {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 7px 12px; background: #f8fafc;
+    font-size: 13px; color: #64748b;
+}
+.search-box input {
+    border: none; outline: none; background: transparent;
+    font-size: 13px; color: #333; width: 180px;
+}
+.search-box input::placeholder { color: #94a3b8; }
+
+/* Filter */
+.filter-wrap { position: relative; }
+.filter-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border: 1px solid #e2e8f0;
+    border-radius: 8px; background: #fff; cursor: pointer;
+    font-size: 13px; color: #374151; font-weight: 500;
+}
+.filter-btn:hover { background: #f8fafc; }
+.filter-drop {
+    position: absolute; right: 0; top: calc(100% + 4px);
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 50; min-width: 150px; display: none;
+}
+.filter-drop.open { display: block; }
+.filter-drop a { display: block; padding: 8px 14px; font-size: 13px; color: #374151; text-decoration: none; }
+.filter-drop a:hover { background: #f8fafc; }
+
+/* ==============================================
+   TABLE
+   ============================================== */
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+    font-size: 11px; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: .5px;
+    padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+tbody tr { border-bottom: 1px solid #f8fafc; transition: background .1s; }
+tbody tr:hover { background: #fafcff; }
+tbody td { padding: 14px; font-size: 13.5px; color: #334155; vertical-align: middle; }
+
+.td-link { color: #2F4FB5; font-weight: 600; text-decoration: none; cursor: pointer; }
+.td-link:hover { text-decoration: underline; }
+
+/* ==============================================
+   BADGES
+   ============================================== */
+.badge          { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .3px; }
+.badge-success  { background: #dcfce7; color: #16a34a; }
+.badge-danger   { background: #fee2e2; color: #dc2626; }
+.badge-warning  { background: #fef9c3; color: #ca8a04; }
+.badge-info     { background: #e0e7ff; color: #2F4FB5; }
+.badge-approved { background: #dcfce7; color: #16a34a; }
+.badge-rejected { background: #fee2e2; color: #dc2626; }
+.badge-pending  { background: #fef9c3; color: #ca8a04; }

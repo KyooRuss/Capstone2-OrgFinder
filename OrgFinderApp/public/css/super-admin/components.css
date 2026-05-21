@@ -1,0 +1,136 @@
+/* ==============================================
+   CARD
+   ============================================== */
+.card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 20px 24px;
+}
+
+/* ==============================================
+   BUTTONS
+   ============================================== */
+.btn {
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.btn-primary       { background: #4A6CF7; color: #fff; }
+.btn-primary:hover { background: #2346D4; }
+.btn-success       { background: #22c55e; color: #fff; }
+.btn-success:hover { background: #16a34a; }
+.btn-danger        { background: #ef4444; color: #fff; }
+.btn-danger:hover  { background: #dc2626; }
+.btn-outline       { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+.btn-outline:hover { background: #f9fafb; }
+.btn-sm            { padding: 5px 10px; font-size: 12px; }
+
+/* Icon button */
+.icon-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 5px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: opacity .15s;
+}
+.icon-btn:hover { opacity: .7; }
+.icon-btn svg { width: 18px; height: 18px; }
+
+/* ==============================================
+   MODALS
+   ============================================== */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 1000;
+    align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+    background: #fff; border-radius: 14px;
+    padding: 28px 30px; width: 100%; max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    position: relative; max-height: 90vh; overflow-y: auto;
+}
+.modal-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; font-size: 20px;
+    cursor: pointer; color: #94a3b8; line-height: 1;
+}
+.modal-close:hover { color: #334155; }
+
+.modal-title   { font-size: 17px; font-weight: 700; color: #2F4FB5; margin-bottom: 16px; }
+.modal-icon    { font-size: 40px; text-align: center; margin-bottom: 10px; }
+.modal-body    { font-size: 13.5px; color: #64748b; text-align: center; line-height: 1.6; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* ==============================================
+   FORMS
+   ============================================== */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+
+.form-control {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    font-size: 13.5px; color: #333; outline: none;
+    background: #f8fafc; transition: border-color .2s;
+}
+.form-control:focus        { border-color: #6F8FE6; background: #fff; }
+.form-control::placeholder { color: #bbb; }
+textarea.form-control      { resize: vertical; min-height: 80px; }
+
+/* ==============================================
+   FLASH ALERTS
+   ============================================== */
+.flash         { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px; font-weight: 500; }
+.flash-success { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+.flash-error   { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+
+/* ==============================================
+   LOGO UPLOAD
+   ============================================== */
+.logo-upload {
+    width: 100px; height: 100px; border-radius: 50%;
+    border: 2px dashed #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden; position: relative;
+    background: #f8fafc; flex-shrink: 0;
+}
+.logo-upload:hover { border-color: #6F8FE6; }
+.logo-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.logo-upload img   { width: 100%; height: 100%; object-fit: cover; }
+
+/* ==============================================
+   PHOTO SLOT
+   ============================================== */
+.photo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.photo-slot {
+    aspect-ratio: 1; border: 2px dashed #e2e8f0; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #f8fafc; overflow: hidden; position: relative;
+}
+.photo-slot:hover            { border-color: #6F8FE6; }
+.photo-slot input            { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.photo-slot img              { width: 100%; height: 100%; object-fit: cover; }
+.photo-slot .placeholder     { color: #cbd5e1; text-align: center; }
+.photo-slot .placeholder svg { width: 32px; height: 32px; }
+
+/* ==============================================
+   ACCESS USER LIST
+   ============================================== */
+.access-list { list-style: none; }
+.access-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+}
+.access-item:last-child { border-bottom: none; }
+.access-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: #e2e8f0; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #64748b; flex-shrink: 0;
+}
+.access-info .aname  { font-size: 13.5px; font-weight: 600; color: #1e2f6e; }
+.access-info .aemail { font-size: 11.5px; color: #94a3b8; }
+.access-pos          { font-size: 12.5px; color: #64748b; margin-left: auto; padding-right: 10px; }

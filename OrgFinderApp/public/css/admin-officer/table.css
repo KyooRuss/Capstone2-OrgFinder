@@ -1,0 +1,76 @@
+/* ==============================================
+   TOOLBAR
+   ============================================== */
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.toolbar-left { font-size: 15px; font-weight: 700; color: #1e2f6e; flex: 1; }
+
+/* Search box */
+.search-box {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid #e2e8f0; border-radius: 22px;
+    padding: 7px 14px; background: #f8fafc;
+    min-width: 200px;
+}
+.search-box input {
+    border: none; outline: none; background: transparent;
+    font-size: 13px; color: #333; width: 100%;
+}
+.search-box input::placeholder { color: #94a3b8; }
+
+/* Filter */
+.filter-wrap { position: relative; }
+.filter-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 14px; border: 1px solid #d1d5db;
+    border-radius: 22px; background: #fff; cursor: pointer;
+    font-size: 13px; color: #374151; font-weight: 500; white-space: nowrap;
+}
+.filter-btn:hover { background: #f9fafb; }
+.filter-drop {
+    position: absolute; right: 0; top: calc(100% + 4px);
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 50; min-width: 140px; display: none;
+}
+.filter-drop.open { display: block; }
+.filter-drop a { display: block; padding: 8px 14px; font-size: 13px; color: #374151; text-decoration: none; }
+.filter-drop a:hover { background: #f8fafc; }
+
+/* ==============================================
+   DATA TABLE  (card-row style)
+   ============================================== */
+.table-wrap { overflow-x: auto; }
+
+.data-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+
+.data-table thead th {
+    font-size: 11px; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: .6px;
+    padding: 6px 16px; text-align: left;
+}
+
+.data-table tbody tr {
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    transition: box-shadow .15s;
+}
+.data-table tbody tr:hover { box-shadow: 0 2px 8px rgba(67,97,238,0.12); }
+.data-table tbody td { padding: 14px 16px; font-size: 13.5px; color: #334155; vertical-align: middle; }
+.data-table tbody tr td:first-child { border-radius: 10px 0 0 10px; }
+.data-table tbody tr td:last-child  { border-radius: 0 10px 10px 0; }
+
+/* Cell helpers */
+.td-no    { font-weight: 700; color: #1e293b; font-size: 13px; }
+.td-name  { color: #4361EE; font-weight: 600; cursor: pointer; }
+.td-name:hover { text-decoration: underline; }
+.td-email { color: #4361EE; }
+.td-link  { color: #2F4FB5; font-weight: 600; text-decoration: none; cursor: pointer; }
+.td-link:hover { text-decoration: underline; }
+
+/* ==============================================
+   STATUS TEXT
+   ============================================== */
+.status-active   { color: #0f9800; font-weight: 600; }
+.status-blocked  { color: #424242; font-weight: 600; }
+.status-pending  { color: #e96500; font-weight: 600; }
+.status-approved { color: #0f9800; font-weight: 600; }
+.status-rejected { color: #eb3223; font-weight: 600; }
