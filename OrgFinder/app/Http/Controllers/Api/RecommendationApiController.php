@@ -175,7 +175,7 @@ class RecommendationApiController extends Controller
             'category'     => $org->category,
             'president'    => $org->president,
             'mission'      => $org->mission,
-            'logo'         => $org->logo ? asset('storage/' . $org->logo) : null,
+            'logo'         => $org->logo ? url('storage/' . $org->logo) : null,
             'score'        => $score,
             'match_pct'    => $matchPct,
             'match_reason' => $reason,

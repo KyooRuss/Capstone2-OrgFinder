@@ -42,7 +42,7 @@ class EventApiController extends Controller
             'date'         => $event->date->format('D, M j, Y'),
             'time'         => $event->time,
             'venue'        => $event->venue,
-            'poster'       => $event->event_poster ? asset('storage/' . $event->event_poster) : null,
+            'poster'       => $event->event_poster ? url('storage/' . $event->event_poster) : null,
             'organization' => [
                 'id'   => $event->organization->id,
                 'name' => $event->organization->org_name,
@@ -59,13 +59,13 @@ class EventApiController extends Controller
             'date'         => $event->date->format('D, M j, Y'),
             'time'         => $event->time,
             'venue'        => $event->venue,
-            'poster'       => $event->event_poster ? asset('storage/' . $event->event_poster) : null,
+            'poster'       => $event->event_poster ? url('storage/' . $event->event_poster) : null,
             'benefits'     => $event->benefits->pluck('benefit')->values(),
             'organization' => [
                 'id'       => $event->organization->id,
                 'name'     => $event->organization->org_name,
                 'logo'     => $event->organization->logo
-                    ? asset('storage/' . $event->organization->logo)
+                    ? url('storage/' . $event->organization->logo)
                     : null,
             ],
         ];

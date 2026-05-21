@@ -33,7 +33,7 @@ class ChatApiController extends Controller
             return [
                 'org_id'         => $org->id,
                 'org_name'       => $org->org_name,
-                'org_logo'       => $org->logo ? asset('storage/' . $org->logo) : null,
+                'org_logo'       => $org->logo ? url('storage/' . $org->logo) : null,
                 'unread'         => $unread,
                 'last_message'   => $latest?->message,
                 'last_time'      => $latest?->created_at->setTimezone('Asia/Manila')->format('h:i A'),

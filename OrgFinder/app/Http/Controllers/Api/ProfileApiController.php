@@ -102,7 +102,7 @@ class ProfileApiController extends Controller
         );
 
         return response()->json([
-            'profile_photo' => asset('storage/' . $path),
+            'profile_photo' => url('storage/' . $path),
         ]);
     }
 
@@ -122,7 +122,7 @@ class ProfileApiController extends Controller
             'activities'        => $profile?->preferred_activity ?? [],
             'profile_completed' => $profile?->profile_completed ?? false,
             'profile_photo'     => $profile?->profile_photo
-                ? asset('storage/' . $profile->profile_photo)
+                ? url('storage/' . $profile->profile_photo)
                 : null,
         ];
     }

@@ -45,7 +45,7 @@ class OrganizationApiController extends Controller
                 'id'       => $o->id,
                 'name'     => $o->org_name,
                 'category' => $o->category,
-                'logo'     => $o->logo ? asset('storage/' . $o->logo) : null,
+                'logo'     => $o->logo ? url('storage/' . $o->logo) : null,
             ]),
         ]);
     }
@@ -101,7 +101,7 @@ class OrganizationApiController extends Controller
             'category'     => $org->category,
             'president'    => $org->president,
             'mission'      => $org->mission,
-            'logo'         => $org->logo ? asset('storage/' . $org->logo) : null,
+            'logo'         => $org->logo ? url('storage/' .$org->logo) : null,
             'is_recruiting'=> $org->is_recruiting,
         ];
     }
@@ -121,9 +121,9 @@ class OrganizationApiController extends Controller
             'room_number'      => $org->room_number,
             'contact_telegram' => $org->contact_telegram,
             'contact_facebook' => $org->contact_facebook,
-            'logo'             => $org->logo ? asset('storage/' . $org->logo) : null,
-            'photos'           => $org->photos->map(fn($p) => asset('storage/' . $p->photo_path))->values(),
-            'event_photos'     => $org->events->filter(fn($e) => $e->event_poster)->map(fn($e) => asset('storage/' . $e->event_poster))->values(),
+            'logo'             => $org->logo ? url('storage/' .$org->logo) : null,
+            'photos'           => $org->photos->map(fn($p) => url('storage/' .$p->photo_path))->values(),
+            'event_photos'     => $org->events->filter(fn($e) => $e->event_poster)->map(fn($e) => url('storage/' .$e->event_poster))->values(),
             'reasons'          => $org->reasons->pluck('reason')->values(),
             'testimonials'     => $org->testimonials->map(fn($t) => [
                 'text'   => $t->testimonial,
@@ -134,7 +134,7 @@ class OrganizationApiController extends Controller
                 'title'  => $e->title,
                 'date'   => $e->date instanceof \Carbon\Carbon ? $e->date->format('M j, Y') : \Carbon\Carbon::parse($e->date)->format('M j, Y'),
                 'venue'  => $e->venue,
-                'poster' => $e->event_poster ? asset('storage/' . $e->event_poster) : null,
+                'poster' => $e->event_poster ? url('storage/' .$e->event_poster) : null,
             ])->values(),
         ];
     }

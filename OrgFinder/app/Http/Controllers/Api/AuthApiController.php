@@ -72,7 +72,7 @@ class AuthApiController extends Controller
             'activities'        => $profile?->preferred_activity ?? [],
             'profile_completed' => $profile?->profile_completed ?? false,
             'profile_photo'     => $profile?->profile_photo
-                ? asset('storage/' . $profile->profile_photo)
+                ? url('storage/' . $profile->profile_photo)
                 : null,
         ];
     }
