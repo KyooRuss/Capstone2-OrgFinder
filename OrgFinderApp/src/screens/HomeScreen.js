@@ -7,6 +7,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
@@ -20,6 +22,7 @@ export default function HomeScreen({ navigation }) {
     const [loading, setLoading]         = useState(true);
     const [refreshing, setRefreshing]   = useState(false);
     const [latestEvent, setLatestEvent] = useState(null);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const { width } = useWindowDimensions();
     const mascotSize = Math.min(Math.round(width * 0.35), 140);
@@ -39,6 +42,29 @@ export default function HomeScreen({ navigation }) {
     }, []);
 
     useEffect(() => { loadData(); }, []);
+
+    const loadUnread = useCallback(async () => {
+        try {
+            const keys = await AsyncStorage.getAllKeys();
+            const chatKeys = keys.filter(k => k.startsWith('chat_last_read_'));
+            const reads = {};
+            if (chatKeys.length) {
+                const pairs = await AsyncStorage.multiGet(chatKeys);
+                pairs.forEach(([key, val]) => {
+                    const orgId = key.replace('chat_last_read_', '');
+                    reads[orgId] = val;
+                });
+            }
+            const params = new URLSearchParams();
+            Object.entries(reads).forEach(([orgId, lastId]) => {
+                params.append(`reads[${orgId}]`, lastId);
+            });
+            const res = await api.get(`/chat/unread?${params.toString()}`);
+            setUnreadCount(res.data.unread ?? 0);
+        } catch {}
+    }, []);
+
+    useFocusEffect(useCallback(() => { loadUnread(); }, [loadUnread]));
 
     const getMatchColor = (pct) => {
         if (pct >= 70) return '#16a34a';
@@ -103,12 +129,30 @@ export default function HomeScreen({ navigation }) {
                         <View>
                             <Text style={styles.greeting}>Hello, {firstName}!</Text>
                         </View>
-                        <TouchableOpacity
-                            style={styles.avatarBtn}
-                            onPress={() => navigation.navigate('Profile')}
-                        >
-                            <Text style={styles.avatarText}>{firstName?.[0] ?? 'S'}</Text>
-                        </TouchableOpacity>
+                        <View style={styles.headerActions}>
+                            {/* Chat bell */}
+                            <TouchableOpacity
+                                style={styles.avatarBtn}
+                                onPress={() => navigation.navigate('MyChats')}
+                                activeOpacity={0.8}
+                            >
+                                <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                                {unreadCount > 0 && (
+                                    <View style={styles.badge}>
+                                        <Text style={styles.badgeText}>
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                            {/* Avatar */}
+                            <TouchableOpacity
+                                style={styles.avatarBtn}
+                                onPress={() => navigation.navigate('Profile')}
+                            >
+                                <Text style={styles.avatarText}>{firstName?.[0] ?? 'S'}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     {/* Mascot */}
@@ -239,12 +283,22 @@ const styles = StyleSheet.create({
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10 },
     greeting: { fontSize: 22, fontWeight: '600', color: '#fff' },
     subGreeting: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
+    headerActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     avatarBtn: {
         width: 40, height: 40, borderRadius: 20,
         backgroundColor: 'rgba(255,255,255,0.25)',
         alignItems: 'center', justifyContent: 'center',
     },
     avatarText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+    badge: {
+        position: 'absolute', top: -4, right: -4,
+        backgroundColor: '#ef4444',
+        borderRadius: 10, minWidth: 18, height: 18,
+        alignItems: 'center', justifyContent: 'center',
+        paddingHorizontal: 4,
+        borderWidth: 1.5, borderColor: '#4A6CF7',
+    },
+    badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
     quickActions: {
         flexDirection: 'row',
         backgroundColor: '#fff',

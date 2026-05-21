@@ -13,6 +13,8 @@ import OrgsScreen        from '../screens/OrganizationsScreen';
 import OrgDetailScreen   from '../screens/OrgDetailScreen';
 import EventsScreen      from '../screens/EventsScreen';
 import EventDetailScreen from '../screens/EventDetailScreen';
+import OrgChatScreen     from '../screens/OrgChatScreen';
+import MyChatsScreen     from '../screens/MyChatsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +43,8 @@ export default function AppNavigator() {
                         <Stack.Screen name="OrgDetail"   component={OrgDetailScreen} />
                         <Stack.Screen name="Events"      component={EventsScreen} />
                         <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+                        <Stack.Screen name="OrgChat"     component={OrgChatScreen} />
+                        <Stack.Screen name="MyChats"     component={MyChatsScreen} />
                     </>
                 )}
             </Stack.Navigator>

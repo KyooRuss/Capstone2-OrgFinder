@@ -4,7 +4,7 @@ import axios from 'axios';
 // Update this to your Laravel server IP when testing on a physical device
 // For Android emulator use: http://10.0.2.2:8000
 // For Expo Go on device: use your machine's LAN IP e.g. http://192.168.x.x:8000
-export const BASE_URL = 'https://capstone-orgfinder-production-b3fb.up.railway.app';
+export const BASE_URL = 'http://192.168.254.122:8000';
 const API_URL = `${BASE_URL}/api`;
 
 const api = axios.create({

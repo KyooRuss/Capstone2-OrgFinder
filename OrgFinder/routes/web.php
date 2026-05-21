@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminOfficer\EventController as AdminOfficerEventContro
 use App\Http\Controllers\AdminOfficer\MemberController;
 use App\Http\Controllers\AdminOfficer\RecruitmentController;
 use App\Http\Controllers\AdminOfficer\TrashController as AdminOfficerTrashController;
+use App\Http\Controllers\AdminOfficer\ChatController as AdminOfficerChatController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('super-admin.login'));
@@ -133,6 +134,13 @@ Route::prefix('admin-officer')->name('admin-officer.')->group(function () {
             Route::get('/members', [AdminOfficerTrashController::class, 'members'])->name('members');
             Route::post('/users/{user}/restore', [AdminOfficerTrashController::class, 'restoreUser'])->name('users.restore');
             Route::delete('/users/{user}', [AdminOfficerTrashController::class, 'forceDeleteUser'])->name('users.force-delete');
+        });
+
+        // Group Chat
+        Route::prefix('chat')->name('chat.')->group(function () {
+            Route::get('/', [AdminOfficerChatController::class, 'index'])->name('index');
+            Route::get('/poll', [AdminOfficerChatController::class, 'poll'])->name('poll');
+            Route::post('/send', [AdminOfficerChatController::class, 'send'])->name('send');
         });
     });
 });

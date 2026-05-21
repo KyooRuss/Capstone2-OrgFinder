@@ -86,7 +86,11 @@ class OrganizationApiController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
-        return response()->json(['organization' => $this->orgDetailResource($org, $myRequest?->status)]);
+        $isMember = $org->accessUsers()
+            ->where('user_id', $request->user()->id)
+            ->exists();
+
+        return response()->json(['organization' => $this->orgDetailResource($org, $myRequest?->status, $isMember)]);
     }
 
     private function orgResource(Organization $org): array
@@ -102,12 +106,13 @@ class OrganizationApiController extends Controller
         ];
     }
 
-    private function orgDetailResource(Organization $org, ?string $myRequestStatus = null): array
+    private function orgDetailResource(Organization $org, ?string $myRequestStatus = null, bool $isMember = false): array
     {
         return [
             'id'               => $org->id,
             'is_recruiting'    => $org->is_recruiting,
             'my_request_status'=> $myRequestStatus,
+            'is_member'        => $isMember,
             'name'             => $org->org_name,
             'category'         => $org->category,
             'president'        => $org->president,

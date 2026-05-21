@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\OrganizationApiController;
 use App\Http\Controllers\Api\EventApiController;
 use App\Http\Controllers\Api\RecommendationApiController;
 use App\Http\Controllers\Api\MembershipRequestApiController;
+use App\Http\Controllers\Api\ChatApiController;
 use Illuminate\Support\Facades\Route;
 
 // Public
@@ -31,4 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/organizations/{id}/apply', [MembershipRequestApiController::class, 'apply']);
     Route::get('/organizations/{id}/my-status', [MembershipRequestApiController::class, 'myStatus']);
+
+    Route::get('/chat/my-chats', [ChatApiController::class, 'myChats']);
+    Route::get('/chat/unread', [ChatApiController::class, 'unreadCount']);
+    Route::get('/chat/{orgId}/messages', [ChatApiController::class, 'messages']);
+    Route::post('/chat/{orgId}/send', [ChatApiController::class, 'send']);
 });

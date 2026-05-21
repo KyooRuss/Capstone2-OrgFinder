@@ -125,6 +125,18 @@ export default function OrgDetailScreen({ route, navigation }) {
                 </LinearGradient>
 
                 <View style={styles.body}>
+                    {/* Group Chat button — visible only to accepted members */}
+                    {org.is_member && (
+                        <TouchableOpacity
+                            style={styles.chatBtn}
+                            onPress={() => navigation.navigate('OrgChat', { orgId: org.id, orgName: org.name })}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="chatbubbles" size={18} color="#fff" style={{ marginRight: 8 }} />
+                            <Text style={styles.chatBtnText}>Group Chat</Text>
+                        </TouchableOpacity>
+                    )}
+
                     {/* About */}
                     {org.mission ? (
                         <View style={styles.section}>
@@ -339,6 +351,21 @@ const styles = StyleSheet.create({
     heroName: { fontSize: 20, fontWeight: '800', color: '#fff', marginBottom: 4 },
     heroPresident: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontStyle: 'italic' },
     body: { padding: 16 },
+    chatBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#4A6CF7',
+        borderRadius: 12,
+        paddingVertical: 13,
+        marginBottom: 14,
+        shadowColor: '#4A6CF7',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    chatBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
     section: {
         backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 14,
         elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
