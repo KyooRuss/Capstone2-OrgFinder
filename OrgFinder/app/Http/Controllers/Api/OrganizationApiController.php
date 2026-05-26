@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\OrganizationAccess;
 use Illuminate\Http\Request;
 
 class OrganizationApiController extends Controller
@@ -25,12 +26,41 @@ class OrganizationApiController extends Controller
         'Sports'                  => ['Competition', 'Team Strategy', 'E-Sports', 'Gaming', 'Service', 'Discipline'],
     ];
 
+    public function myOrganizations(Request $request)
+    {
+        $user = $request->user();
+
+        $orgs = Organization::whereHas('accessUsers', fn($q) => $q->where('user_id', $user->id))
+            ->whereNull('deleted_at')
+            ->orderBy('org_name')
+            ->get();
+
+        return response()->json([
+            'organizations' => $orgs->map(fn($o) => [
+                'id'       => $o->id,
+                'name'     => $o->org_name,
+                'category' => $o->category,
+                'logo'     => $o->logo ? url('storage/' . $o->logo) : null,
+                'position' => OrganizationAccess::where('organization_id', $o->id)
+                                ->where('user_id', $user->id)
+                                ->value('position'),
+            ]),
+        ]);
+    }
+
     public function recruiting(Request $request)
     {
         $user        = $request->user();
         $userProgram = $user->profile?->program;
 
-        $orgs = Organization::with(['photos'])
+        // Pre-load the user's actual memberships for fast lookup
+        $memberOrgIds = OrganizationAccess::where('user_id', $user->id)
+            ->pluck('organization_id')
+            ->flip();
+
+        $userHasOrg = $memberOrgIds->isNotEmpty();
+
+        $orgs = Organization::with(['photos', 'membershipRequests'])
             ->whereNull('deleted_at')
             ->where('is_recruiting', true)
             ->orderBy('org_name')
@@ -41,11 +71,16 @@ class OrganizationApiController extends Controller
             })->values();
 
         return response()->json([
-            'recruiting' => $orgs->map(fn($o) => [
-                'id'       => $o->id,
-                'name'     => $o->org_name,
-                'category' => $o->category,
-                'logo'     => $o->logo ? url('storage/' . $o->logo) : null,
+            'user_has_org' => $userHasOrg,
+            'recruiting'   => $orgs->map(fn($o) => [
+                'id'        => $o->id,
+                'name'      => $o->org_name,
+                'category'  => $o->category,
+                'logo'      => $o->logo ? url('storage/' . $o->logo) : null,
+                'is_member' => isset($memberOrgIds[$o->id]),
+                'my_status' => $o->membershipRequests
+                    ->where('user_id', $user->id)
+                    ->first()?->status,
             ]),
         ]);
     }
@@ -65,8 +100,16 @@ class OrganizationApiController extends Controller
         }
 
         $userProgram = $user->profile?->program;
+        $isProf      = $user->isProf();
+        $deptFilter  = $request->query('department');
 
-        $orgs = $query->orderBy('org_name')->get()->filter(function ($org) use ($userProgram) {
+        $orgs = $query->orderBy('org_name')->get()->filter(function ($org) use ($userProgram, $isProf, $deptFilter) {
+            if ($isProf) {
+                if ($deptFilter) {
+                    return $org->department === $deptFilter;
+                }
+                return true;
+            }
             $eligible = $org->eligible_programs;
             return empty($eligible) || in_array($userProgram, $eligible);
         })->values();

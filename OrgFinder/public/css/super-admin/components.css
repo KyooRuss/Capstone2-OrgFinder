@@ -30,12 +30,14 @@
 /* Icon button */
 .icon-btn {
     background: none; border: none; cursor: pointer;
-    padding: 5px; border-radius: 6px;
+    -webkit-appearance: none; appearance: none; outline: none;
+    padding: 6px; border-radius: 8px;
     display: inline-flex; align-items: center; justify-content: center;
-    transition: opacity .15s;
+    transition: background .15s;
+    text-decoration: none;
 }
-.icon-btn:hover { opacity: .7; }
-.icon-btn svg { width: 18px; height: 18px; }
+.icon-btn:hover { background: #f1f5f9; }
+.icon-btn svg { width: 18px; height: 18px; display: block; }
 
 /* ==============================================
    MODALS

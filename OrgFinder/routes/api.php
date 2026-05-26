@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\EventApiController;
 use App\Http\Controllers\Api\RecommendationApiController;
 use App\Http\Controllers\Api\MembershipRequestApiController;
 use App\Http\Controllers\Api\ChatApiController;
+use App\Http\Controllers\Api\NotificationApiController;
+use App\Http\Controllers\Api\AnnouncementApiController;
 use Illuminate\Support\Facades\Route;
 
 // Public
@@ -22,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/photo', [ProfileApiController::class, 'uploadPhoto']);
 
     Route::get('/organizations', [OrganizationApiController::class, 'index']);
+    Route::get('/organizations/my', [OrganizationApiController::class, 'myOrganizations']);
     Route::get('/organizations/recruiting', [OrganizationApiController::class, 'recruiting']);
     Route::get('/organizations/{id}', [OrganizationApiController::class, 'show']);
 
@@ -37,4 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chat/unread', [ChatApiController::class, 'unreadCount']);
     Route::get('/chat/{orgId}/messages', [ChatApiController::class, 'messages']);
     Route::post('/chat/{orgId}/send', [ChatApiController::class, 'send']);
+
+    // Announcements
+    Route::get('/announcements', [AnnouncementApiController::class, 'index']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationApiController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationApiController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [NotificationApiController::class, 'markRead']);
+    Route::post('/notifications/read-all', [NotificationApiController::class, 'markAllRead']);
 });

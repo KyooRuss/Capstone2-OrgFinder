@@ -188,6 +188,30 @@
                     'selectedPrograms'=> old('eligible_programs', $organization->eligible_programs ?? []),
                     'inputId'         => 'programSelect',
                 ])
+
+                <div style="margin-top:18px;">
+                    <p class="section-title" style="margin-bottom:6px;">Department Filter</p>
+                    <p style="font-size:12px;color:#94a3b8;margin-bottom:10px;">Restrict this org to a specific department (for professor view). Leave empty to show to all.</p>
+                    @php
+                        $departments = [
+                            'College of Information Technology',
+                            'College of Engineering',
+                            'College of Nursing',
+                            'College of Business Administration',
+                            'College of Arts and Sciences',
+                            'College of Education',
+                            'College of Criminology',
+                        ];
+                    @endphp
+                    <select name="department" class="form-control">
+                        <option value="">— All Departments —</option>
+                        @foreach($departments as $dept)
+                            <option value="{{ $dept }}" {{ old('department', $organization->department) === $dept ? 'selected' : '' }}>
+                                {{ $dept }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
             <div class="card">

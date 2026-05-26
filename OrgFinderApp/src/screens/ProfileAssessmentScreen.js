@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
-    StyleSheet, ScrollView, ActivityIndicator, Alert, 
+    StyleSheet, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
@@ -12,58 +12,78 @@ const PROGRAMS = ['BSIT', 'BSCS', 'BSIS', 'BSCpE', 'BSCE', 'BSEE', 'BSME', 'BSN'
 const YEAR_LEVELS = ['1st', '2nd', '3rd', '4th', '5th'];
 
 const INTERESTS = [
-    'Technology', 'Programming',  'Arts', 'Networking', 'Leadership', 'Research', 'Dancing', 'Photography',
+    'Technology', 'Programming', 'Arts', 'Networking', 'Leadership', 'Research', 'Dancing', 'Photography',
     'Gaming', 'Sign Language', 'Photo Video Editing', 'Singing', 'Mental First Aid', 'Acting', 'Innovation',
     'Recording Production', 'Music Publishing',
 ];
 const SKILLS = [
-    'Programming', 'Sign Language Fluency', 'Singing', 'Leadership', 'Voice Acting', 'Research Writing', 'Public Speaking', 
-    'Music Production', 'Stage Performance', 'Strategic Gaming', 'Event Planning', 'Dancing', 
+    'Programming', 'Sign Language Fluency', 'Singing', 'Leadership', 'Voice Acting', 'Research Writing', 'Public Speaking',
+    'Music Production', 'Stage Performance', 'Strategic Gaming', 'Event Planning', 'Dancing',
 ];
 const ACTIVITIES = [
-    'Competition', 'E-Sports Tournament', 'Training', 'Seminar', 'Peer Counseling', 'Public Speaking Event', 'Workshop', 
+    'Competition', 'E-Sports Tournament', 'Training', 'Seminar', 'Peer Counseling', 'Public Speaking Event', 'Workshop',
     'Tech Talk', 'Theater Performance', 'Media Production', 'Forum',
 ];
 
 export default function ProfileAssessmentScreen() {
-    const { setUser, refreshUser } = useContext(AuthContext);
+    const { user, refreshUser } = useContext(AuthContext);
+    const isProf = user?.role === 'prof';
 
     const [first_name, setFirstName]  = useState('');
     const [last_name, setLastName]    = useState('');
+    const [department, setDepartment] = useState('');
+
+    // Student-only fields
     const [yearLevel, setYearLevel]   = useState('');
     const [program, setProgram]       = useState('');
     const [interests, setInterests]   = useState([]);
     const [skills, setSkills]         = useState([]);
     const [activities, setActivities] = useState([]);
-    const [loading, setLoading]       = useState(false);
 
-    const [modal, setModal] = useState(null); // 'yearLevel' | 'program' | 'interests' | 'skills' | 'activities'
+    const [loading, setLoading] = useState(false);
+    const [modal, setModal]     = useState(null);
 
     const dropdowns = {
-        yearLevel: { label: yearLevel || '', field: 'yearLevel' },
-        program: { label: program || 'Select program', field: 'program' },
-        interests: { label: interests.length ? interests.join(', ') : 'Select interest or hobby', field: 'interests' },
-        skills: { label: skills.length ? skills.join(', ') : 'Select skills to improve', field: 'skills' },
-        activities: { label: activities.length ? activities.join(', ') : 'Select preferred activities', field: 'activities' },
+        yearLevel:  { label: yearLevel || '' },
+        program:    { label: program || 'Select program' },
+        interests:  { label: interests.length ? interests.join(', ') : 'Select interest or hobby' },
+        skills:     { label: skills.length ? skills.join(', ') : 'Select skills to improve' },
+        activities: { label: activities.length ? activities.join(', ') : 'Select preferred activities' },
     };
 
     const handleSubmit = async () => {
-        if (!first_name || !last_name || !yearLevel || !program || !interests.length || !skills.length || !activities.length) {
-            Alert.alert('Incomplete', 'Please fill in all fields.');
+        if (!first_name.trim() || !last_name.trim()) {
+            Alert.alert('Incomplete', 'Please enter your name.');
             return;
         }
+
+        if (isProf) {
+            if (!department.trim()) {
+                Alert.alert('Incomplete', 'Please enter your department.');
+                return;
+            }
+        } else {
+            if (!yearLevel || !program || !interests.length || !skills.length || !activities.length) {
+                Alert.alert('Incomplete', 'Please fill in all fields.');
+                return;
+            }
+        }
+
         setLoading(true);
         try {
-            const yearNum = YEAR_LEVELS.indexOf(yearLevel) + 1;
-            await api.post('/profile/complete', {
-                first_name,
-                last_name,
-                year_level: yearNum,
-                program,
-                interests,
-                skills,
-                activities,
-            });
+            if (isProf) {
+                await api.post('/profile/complete', { first_name, last_name, department });
+            } else {
+                const yearNum = YEAR_LEVELS.indexOf(yearLevel) + 1;
+                await api.post('/profile/complete', {
+                    first_name, last_name,
+                    year_level: yearNum,
+                    program,
+                    interests,
+                    skills,
+                    activities,
+                });
+            }
             await refreshUser();
         } catch (err) {
             Alert.alert('Error', err.message);
@@ -72,10 +92,10 @@ export default function ProfileAssessmentScreen() {
         }
     };
 
-    const renderDropdown = (key, label) => (
-        <TouchableOpacity key={key} style={styles.dropdown} onPress={() => setModal(key)}>
-            <Text style={[styles.dropdownText, dropdowns[key].label === label && styles.placeholder]}>
-                {dropdowns[key].label}
+    const renderDropdown = (key, placeholder) => (
+        <TouchableOpacity style={styles.dropdown} onPress={() => setModal(key)}>
+            <Text style={[styles.dropdownText, dropdowns[key].label === placeholder && styles.placeholder]}>
+                {dropdowns[key].label || placeholder}
             </Text>
             <Text style={styles.chevron}>▾</Text>
         </TouchableOpacity>
@@ -83,14 +103,15 @@ export default function ProfileAssessmentScreen() {
 
     return (
         <View style={styles.root}>
-            {/* Header */}
             <View style={styles.header}>
                 <SafeAreaView>
                     <View style={styles.headerInner}>
-                        <Text style={styles.headerIcon}>👤</Text>
+                        <Text style={styles.headerIcon}>{isProf ? '🎓' : '👤'}</Text>
                         <View>
-                            <Text style={styles.headerTitle}>Profile Assessment</Text>
-                            <Text style={styles.headerSub}>Tell us about yourself</Text>
+                            <Text style={styles.headerTitle}>Profile Setup</Text>
+                            <Text style={styles.headerSub}>
+                                {isProf ? 'Tell us about yourself (Professor)' : 'Tell us about yourself'}
+                            </Text>
                         </View>
                     </View>
                 </SafeAreaView>
@@ -119,31 +140,47 @@ export default function ProfileAssessmentScreen() {
                         />
                     </View>
                 </View>
-                <View style={styles.row}>
-                    <View style={[styles.fieldWrap, { flex: 1 }]}>
-                        <Text style={styles.label}>Program</Text>
-                        {renderDropdown('program', 'Select program')}
+
+                {isProf ? (
+                    <View style={styles.fieldWrap}>
+                        <Text style={styles.label}>Department</Text>
+                        <TextInput
+                            style={styles.textInput}
+                            placeholder="e.g. College of Information Technology"
+                            placeholderTextColor="#bbb"
+                            value={department}
+                            onChangeText={setDepartment}
+                        />
                     </View>
-                    <View style={[styles.fieldWrap, { flex: 0.25 }]}>
-                        <Text style={styles.label}>Year Level</Text>
-                        {renderDropdown('yearLevel', '')}
-                    </View>
-                </View>
+                ) : (
+                    <>
+                        <View style={styles.row}>
+                            <View style={[styles.fieldWrap, { flex: 1 }]}>
+                                <Text style={styles.label}>Program</Text>
+                                {renderDropdown('program', 'Select program')}
+                            </View>
+                            <View style={[styles.fieldWrap, { flex: 0.25 }]}>
+                                <Text style={styles.label}>Year</Text>
+                                {renderDropdown('yearLevel', '')}
+                            </View>
+                        </View>
 
-                <View style={styles.fieldWrap}>
-                    <Text style={styles.label}>Interest or Hobby</Text>
-                    {renderDropdown('interests', 'Select interest or hobby')}
-                </View>
+                        <View style={styles.fieldWrap}>
+                            <Text style={styles.label}>Interest or Hobby</Text>
+                            {renderDropdown('interests', 'Select interest or hobby')}
+                        </View>
 
-                <View style={styles.fieldWrap}>
-                    <Text style={styles.label}>Skills to improve</Text>
-                    {renderDropdown('skills', 'Select skills to improve')}
-                </View>
+                        <View style={styles.fieldWrap}>
+                            <Text style={styles.label}>Skills to improve</Text>
+                            {renderDropdown('skills', 'Select skills to improve')}
+                        </View>
 
-                <View style={styles.fieldWrap}>
-                    <Text style={styles.label}>Preferred Activities</Text>
-                    {renderDropdown('activities', 'Select preferred activities')}
-                </View>
+                        <View style={styles.fieldWrap}>
+                            <Text style={styles.label}>Preferred Activities</Text>
+                            {renderDropdown('activities', 'Select preferred activities')}
+                        </View>
+                    </>
+                )}
 
                 <TouchableOpacity
                     style={[styles.nextBtn, loading && { opacity: 0.7 }]}
@@ -152,68 +189,47 @@ export default function ProfileAssessmentScreen() {
                 >
                     {loading
                         ? <ActivityIndicator color="#fff" />
-                        : <Text style={styles.nextBtnText}>Next</Text>
+                        : <Text style={styles.nextBtnText}>Continue</Text>
                     }
                 </TouchableOpacity>
             </ScrollView>
 
-            {/* Modals */}
             {modal === 'yearLevel' && (
                 <SelectionModal
-                    visible
-                    title="Year Level"
-                    subtitle="Select your year level"
-                    options={YEAR_LEVELS}
-                    selected={yearLevel ? [yearLevel] : []}
-                    max={1}
+                    visible title="Year Level" subtitle="Select your year level"
+                    options={YEAR_LEVELS} selected={yearLevel ? [yearLevel] : []} max={1}
                     onConfirm={(vals) => { setYearLevel(vals[0] || ''); setModal(null); }}
                     onCancel={() => setModal(null)}
                 />
             )}
             {modal === 'program' && (
                 <SelectionModal
-                    visible
-                    title="Program"
-                    subtitle="Select your program"
-                    options={PROGRAMS}
-                    selected={program ? [program] : []}
-                    max={1}
+                    visible title="Program" subtitle="Select your program"
+                    options={PROGRAMS} selected={program ? [program] : []} max={1}
                     onConfirm={(vals) => { setProgram(vals[0] || ''); setModal(null); }}
                     onCancel={() => setModal(null)}
                 />
             )}
             {modal === 'interests' && (
                 <SelectionModal
-                    visible
-                    title="Interest & Hobbies"
-                    subtitle="Select up to 3 interest & hobby"
-                    options={INTERESTS}
-                    selected={interests}
-                    max={3}
+                    visible title="Interest & Hobbies" subtitle="Select up to 3"
+                    options={INTERESTS} selected={interests} max={3}
                     onConfirm={(vals) => { setInterests(vals); setModal(null); }}
                     onCancel={() => setModal(null)}
                 />
             )}
             {modal === 'skills' && (
                 <SelectionModal
-                    visible
-                    title="Skills to improve"
-                    subtitle="Select up to 3 skills"
-                    options={SKILLS}
-                    selected={skills}
-                    max={3}
+                    visible title="Skills to improve" subtitle="Select up to 3"
+                    options={SKILLS} selected={skills} max={3}
                     onConfirm={(vals) => { setSkills(vals); setModal(null); }}
                     onCancel={() => setModal(null)}
                 />
             )}
             {modal === 'activities' && (
                 <SelectionModal
-                    visible
-                    title="Preferred Activities"
-                    subtitle="Select up to 3 activities"
-                    options={ACTIVITIES}
-                    selected={activities}
-                    max={3}
+                    visible title="Preferred Activities" subtitle="Select up to 3"
+                    options={ACTIVITIES} selected={activities} max={3}
                     onConfirm={(vals) => { setActivities(vals); setModal(null); }}
                     onCancel={() => setModal(null)}
                 />

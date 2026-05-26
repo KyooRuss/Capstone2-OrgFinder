@@ -37,7 +37,7 @@ body {
 .brand {
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 2px;
     margin-bottom: 6px;
     justify-content: center;
 }
@@ -45,7 +45,7 @@ body {
 .brand-name {
     font-size: 28px;
     font-weight: 800;
-    letter-spacing: 5px;
+    letter-spacing: 2px;
     color: #1e2f6e;
     line-height: 1;
 }

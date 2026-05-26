@@ -10,8 +10,7 @@
     <div class="center-wrap">
         <div class="card">
             <div class="brand">
-                <img src="{{ asset('images/AppLogo.png') }}" alt="OrgFinder Logo" style="height:70px;width:auto;object-fit:contain;display:block;flex-shrink:0;margin-right:-16px;">
-                <span class="brand-name">RGFINDER</span>
+                <img src="{{ asset('images/AppLogo.png') }}" alt="NEUORG Logo" style="height:60px;width:auto;object-fit:contain;display:block;">
             </div>
             <p class="brand-sub">Manage and Track Student Organizations</p>
 

@@ -12,11 +12,12 @@ class Event extends Model
 
     protected $fillable = [
         'organization_id', 'title', 'description', 'date',
-        'time', 'venue', 'event_poster', 'status',
+        'time', 'venue', 'event_poster', 'status', 'target_departments',
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date'               => 'date',
+        'target_departments' => 'array',
     ];
 
     public function organization()

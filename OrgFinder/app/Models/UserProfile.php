@@ -14,6 +14,7 @@ class UserProfile extends Model
         'student_number',
         'year_level',
         'program',
+        'department',
         'interest',
         'skill_to_improve',
         'preferred_activity',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AdminOfficer;
 
 use App\Http\Controllers\Controller;
 use App\Models\OrganizationAccess;
+use App\Models\MembershipRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -114,10 +115,12 @@ class MemberController extends Controller
 
         $org = $this->myOrganization();
 
+        // Remove from org
         OrganizationAccess::where('organization_id', $org->id)
             ->where('user_id', $user->id)
             ->delete();
 
+        // Reset role to student if no officer positions remain
         $hasOfficerAccess = $user->organizationAccess()
             ->whereIn('position', ['Organization Adviser', 'Organization President'])
             ->exists();
@@ -125,6 +128,11 @@ class MemberController extends Controller
         if (!$hasOfficerAccess) {
             $user->update(['role' => 'student']);
         }
+
+        // Clean up membership request so they can re-apply later
+        MembershipRequest::where('organization_id', $org->id)
+            ->where('user_id', $user->id)
+            ->delete();
 
         return response()->json(['success' => true, 'message' => 'Member removed.']);
     }

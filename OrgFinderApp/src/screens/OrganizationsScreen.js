@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
     FlatList, Image, ActivityIndicator, RefreshControl, Modal, ScrollView,
@@ -7,6 +7,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
 const CATEGORIES = [
@@ -16,7 +17,20 @@ const CATEGORIES = [
     'Mental First Aid', 'Acting', 'Recording Production',
 ];
 
+const DEPARTMENTS = [
+    'All',
+    'College of Information Technology',
+    'College of Engineering',
+    'College of Nursing',
+    'College of Business Administration',
+    'College of Arts and Sciences',
+    'College of Education',
+    'College of Criminology',
+];
+
 export default function OrganizationsScreen({ navigation }) {
+    const { user } = useContext(AuthContext);
+    const isProf = user?.role === 'prof';
     const { width, height } = useWindowDimensions();
     const headerSpacing = Math.round(height * 0.03);
 
@@ -25,20 +39,22 @@ export default function OrganizationsScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [search, setSearch]         = useState('');
     const [category, setCategory]     = useState('All');
-    const [showCatModal, setShowCatModal] = useState(false);
+    const [department, setDepartment] = useState('All');
+    const [showFilterModal, setShowFilterModal] = useState(false);
 
     const loadOrgs = useCallback(async () => {
         try {
             const params = {};
             if (search.trim()) params.search = search.trim();
-            if (category !== 'All') params.category = category;
+            if (!isProf && category !== 'All') params.category = category;
+            if (isProf && department !== 'All') params.department = department;
             const res = await api.get('/organizations', { params });
             setOrgs(res.data.organizations);
         } catch {}
         finally { setLoading(false); setRefreshing(false); }
-    }, [search, category]);
+    }, [search, category, department, isProf]);
 
-    useEffect(() => { setLoading(true); loadOrgs(); }, [category]);
+    useEffect(() => { setLoading(true); loadOrgs(); }, [category, department]);
 
     const renderOrg = ({ item }) => {
         const logoSize = Math.min(Math.round(width * 0.15), 64);
@@ -70,9 +86,6 @@ export default function OrganizationsScreen({ navigation }) {
             <LinearGradient colors={['#7CB9FF', '#4A6CF7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
                 <SafeAreaView>
                     <View style={[styles.headerRow, { marginBottom: headerSpacing }]}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                            <Text style={styles.backIcon}>‹</Text>
-                        </TouchableOpacity>
                         <Text style={styles.headerTitle}>Organizations</Text>
                     </View>
 
@@ -89,31 +102,49 @@ export default function OrganizationsScreen({ navigation }) {
                                 returnKeyType="search"
                             />
                         </View>
-                        <TouchableOpacity style={styles.catBtn} onPress={() => setShowCatModal(true)}>
-                            <Text style={styles.catBtnText}>
-                                {category === 'All' ? 'Category' : category} ▼
-                            </Text>
-                        </TouchableOpacity>
+                        {isProf ? (
+                            <TouchableOpacity
+                                style={[styles.catBtn, department !== 'All' && styles.catBtnActive]}
+                                onPress={() => setShowFilterModal(true)}
+                            >
+                                <Text style={[styles.catBtnText, department !== 'All' && { color: '#fff' }]} numberOfLines={1}>
+                                    {department === 'All' ? 'Dept ▼' : department.replace('College of ', '') + ' ▼'}
+                                </Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={styles.catBtn} onPress={() => setShowFilterModal(true)}>
+                                <Text style={styles.catBtnText} numberOfLines={1}>
+                                    {category === 'All' ? 'Category ▼' : category + ' ▼'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </SafeAreaView>
             </LinearGradient>
 
-            {/* Category dropdown modal */}
-            <Modal visible={showCatModal} transparent animationType="fade" onRequestClose={() => setShowCatModal(false)}>
-                <TouchableOpacity style={[styles.modalOverlay, { paddingTop: Math.round(height * 0.15) }]} activeOpacity={1} onPress={() => setShowCatModal(false)}>
+            {/* Filter dropdown modal */}
+            <Modal visible={showFilterModal} transparent animationType="fade" onRequestClose={() => setShowFilterModal(false)}>
+                <TouchableOpacity style={[styles.modalOverlay, { paddingTop: Math.round(height * 0.15) }]} activeOpacity={1} onPress={() => setShowFilterModal(false)}>
                     <View style={styles.modalBox}>
                         <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                            {CATEGORIES.map(cat => (
-                                <TouchableOpacity
-                                    key={cat}
-                                    style={[styles.modalItem, cat === category && styles.modalItemActive]}
-                                    onPress={() => { setCategory(cat); setShowCatModal(false); }}
-                                >
-                                    <Text style={[styles.modalItemText, cat === category && styles.modalItemTextActive]}>
-                                        {cat}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                            {(isProf ? DEPARTMENTS : CATEGORIES).map(item => {
+                                const active = isProf ? item === department : item === category;
+                                return (
+                                    <TouchableOpacity
+                                        key={item}
+                                        style={[styles.modalItem, active && styles.modalItemActive]}
+                                        onPress={() => {
+                                            if (isProf) setDepartment(item);
+                                            else setCategory(item);
+                                            setShowFilterModal(false);
+                                        }}
+                                    >
+                                        <Text style={[styles.modalItemText, active && styles.modalItemTextActive]}>
+                                            {item}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </ScrollView>
                     </View>
                 </TouchableOpacity>
@@ -160,6 +191,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff', borderRadius: 12, height: 46,
         paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center',
     },
+    catBtnActive: { backgroundColor: '#4A6CF7' },
     catBtnText: { fontSize: 13, fontWeight: '600', color: '#4A6CF7' },
 
     // Category modal
@@ -180,7 +212,7 @@ const styles = StyleSheet.create({
     modalItemTextActive: { color: '#4A6CF7', fontWeight: '700' },
 
     // List
-    list: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 30, gap: 12 },
+    list: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 90, gap: 12 },
     orgCard: {
         backgroundColor: '#fff', borderRadius: 14,
         flexDirection: 'row', alignItems: 'center',

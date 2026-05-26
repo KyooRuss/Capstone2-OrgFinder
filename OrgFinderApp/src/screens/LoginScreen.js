@@ -5,6 +5,8 @@ import {
     Platform, ScrollView, ActivityIndicator, Alert,
     useWindowDimensions,
 } from 'react-native';
+
+const APP_LOGO = require('../../assets/orgfinder-logo.png');
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 
@@ -40,7 +42,7 @@ export default function LoginScreen() {
             <View style={styles.topSection}>
                 <SafeAreaView>
                     <Text style={[styles.hello, { fontSize: helloSize }]}>Hello!</Text>
-                    <Text style={styles.welcome}>Welcome to OrgFinder</Text>
+                    <Text style={styles.helloSub}>Welcome to NEUORG</Text>
                 </SafeAreaView>
             </View>
 
@@ -109,12 +111,25 @@ const styles = StyleSheet.create({
     hello: {
         fontWeight: '800',
         color: '#fff',
-        marginBottom: 6,
+        marginBottom: 4,
     },
-    welcome: {
-        fontSize: 18,
+    helloSub: {
+        fontWeight: '400',
+        fontSize: 14,
         color: 'rgba(255,255,255,0.85)',
+        marginBottom: 10,
     },
+    brandRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    brandText: {
+        fontSize: 38,
+        fontWeight: '800',
+        color: '#fff',
+        letterSpacing: 1,
+    },
+    brandLogo: {},
     cardWrap: {
         backgroundColor: '#fff',
         borderTopLeftRadius: 32,

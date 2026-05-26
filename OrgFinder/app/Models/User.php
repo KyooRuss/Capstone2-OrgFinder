@@ -46,6 +46,16 @@ class User extends Authenticatable
         return $this->role === 'student';
     }
 
+    public function isProf(): bool
+    {
+        return $this->role === 'prof';
+    }
+
+    public function isMobileUser(): bool
+    {
+        return in_array($this->role, ['student', 'prof']);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

@@ -16,10 +16,10 @@
 <aside class="sidebar">
     <div class="sidebar-brand">
         <div class="brand-icon">
-            <img src="{{ asset('images/AppLogo.png') }}" alt="OrgFinder Logo" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+            <img src="{{ asset('images/AppLogo.png') }}" alt="NEUORG Logo" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
         </div>
         <div class="brand-text">
-            <div class="name">ORGFINDER</div>
+            <div class="name">NEU ORG</div>
             <div class="sub">Admin Panel</div>
         </div>
     </div>
@@ -59,7 +59,7 @@
         </div>
 
         {{-- Users Dropdown --}}
-        @php $usersOpen = request()->routeIs('super-admin.admin-officers.*') || request()->routeIs('super-admin.students.*'); @endphp
+        @php $usersOpen = request()->routeIs('super-admin.admin-officers.*') || request()->routeIs('super-admin.students.*') || request()->routeIs('super-admin.profs.*'); @endphp
         <div class="nav-group">
             <button class="nav-dropdown-btn {{ $usersOpen ? 'open' : '' }}" onclick="toggleNav('usersMenu', this)">
                 <span style="display:flex;align-items:center;gap:10px;">
@@ -76,6 +76,10 @@
                 <a href="{{ route('super-admin.students.index') }}"
                    class="nav-item nav-sub {{ request()->routeIs('super-admin.students.*') ? 'active' : '' }}">
                     Students
+                </a>
+                <a href="{{ route('super-admin.profs.index') }}"
+                   class="nav-item nav-sub {{ request()->routeIs('super-admin.profs.*') ? 'active' : '' }}">
+                    Professors
                 </a>
             </div>
         </div>

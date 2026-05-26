@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Services\GeminiEmbeddingService;
 use Illuminate\Http\Request;
 
 class RecommendationApiController extends Controller
@@ -57,40 +58,73 @@ class RecommendationApiController extends Controller
         'BSCpE' => ['Technology', 'Systems & Networking', 'Information Technology', 'Research', 'Academic Organization'],
     ];
 
-    public function index(Request $request)
+    public function index(Request $request, GeminiEmbeddingService $gemini)
     {
         $user = $request->user();
-
         $user->loadMissing('profile');
+
         $userProgram    = $user->profile?->program;
         $userInterests  = $user->profile?->interest ?? [];
         $userSkills     = $user->profile?->skill_to_improve ?? [];
         $userActivities = $user->profile?->preferred_activity ?? [];
 
-        $orgs = Organization::with(['photos'])
-            ->whereNull('deleted_at')
+        // Exclude orgs the user already belongs to
+        $memberOrgIds = $user->organizations()->pluck('organizations.id')->flip()->toArray();
+
+        $orgs = Organization::whereNull('deleted_at')
             ->get()
-            ->filter(function ($org) use ($userProgram) {
+            ->filter(function ($org) use ($userProgram, $memberOrgIds) {
+                if (isset($memberOrgIds[$org->id])) return false;
                 $eligible = $org->eligible_programs;
                 return empty($eligible) || in_array($userProgram, $eligible);
             });
 
-        $scored = $orgs->map(function ($org) use ($userInterests, $userSkills, $userActivities, $userProgram) {
-            [$score, $matchedTags] = $this->scoreOrg($org, $userInterests, $userSkills, $userActivities, $userProgram);
-            return [
-                'org'         => $org,
-                'score'       => $score,
-                'matchedTags' => $matchedTags,
-            ];
+        // Build user profile text and ask Gemini to rank the orgs
+        $userText  = $gemini->userToText($userProgram, $userInterests, $userSkills, $userActivities);
+        $orgArray  = $orgs->values()->all();
+        $ranked    = $gemini->rankOrgs($orgArray, $userText);
+
+        // If Gemini is unavailable, fall back to keyword scoring
+        if (!$ranked) {
+            return $this->keywordFallback($orgs, $userInterests, $userSkills, $userActivities, $userProgram);
+        }
+
+        // Map Gemini's ranked IDs back to org models; only keep genuinely relevant results
+        $orgById = $orgs->keyBy('id');
+        $results = collect($ranked)
+            ->filter(fn($r) => isset($orgById[$r['id']]) && ($r['match_pct'] ?? 0) >= 30)
+            ->map(fn($r) => $this->formatOrgAI($orgById[$r['id']], $r['match_pct'], $r['match_reason']))
+            ->take(10)
+            ->values();
+
+        return response()->json(['recommendations' => $results]);
+    }
+
+    private function keywordFallback($orgs, array $interests, array $skills, array $activities, ?string $program)
+    {
+        $hasProgramBonus = !empty(self::PROGRAM_MAP[$program ?? '']);
+        $maxScore = max(1,
+            count($interests)  * 3 +
+            count($skills)     * 2 +
+            count($activities) * 1 +
+            ($hasProgramBonus ? 1 : 0)
+        );
+
+        $scored = $orgs->map(function ($org) use ($interests, $skills, $activities, $program) {
+            [$score, $matchedTags] = $this->scoreOrg($org, $interests, $skills, $activities, $program);
+            return ['org' => $org, 'score' => $score, 'matchedTags' => $matchedTags];
         })
-        ->sortByDesc('score')
+        ->sort(function ($a, $b) {
+            if ($b['score'] !== $a['score']) return $b['score'] <=> $a['score'];
+            return ($b['org']->is_recruiting ? 1 : 0) <=> ($a['org']->is_recruiting ? 1 : 0);
+        })
         ->values();
 
         $matched   = $scored->filter(fn($i) => $i['score'] > 0)->take(10)->values();
         $displayed = $matched->isNotEmpty() ? $matched : $scored->take(10)->values();
 
         return response()->json([
-            'recommendations' => $displayed->map(fn($item) => $this->formatOrg($item)),
+            'recommendations' => $displayed->map(fn($item) => $this->formatOrg($item, $maxScore)),
         ]);
     }
 
@@ -107,7 +141,7 @@ class RecommendationApiController extends Controller
         foreach ($interests as $interest) {
             $cats = array_map('strtolower', self::INTEREST_MAP[$interest] ?? []);
             foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $cats) || $this->partialMatch($orgCat, $cats)) {
+                if (in_array($orgCat, $cats, true)) {
                     $score += 3; $matchedTags[] = $interest; break;
                 }
             }
@@ -116,7 +150,7 @@ class RecommendationApiController extends Controller
         foreach ($skills as $skill) {
             $cats = array_map('strtolower', self::SKILL_MAP[$skill] ?? []);
             foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $cats) || $this->partialMatch($orgCat, $cats)) {
+                if (in_array($orgCat, $cats, true)) {
                     $score += 2; $matchedTags[] = $skill; break;
                 }
             }
@@ -125,7 +159,7 @@ class RecommendationApiController extends Controller
         foreach ($activities as $activity) {
             $cats = array_map('strtolower', self::ACTIVITY_MAP[$activity] ?? []);
             foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $cats) || $this->partialMatch($orgCat, $cats)) {
+                if (in_array($orgCat, $cats, true)) {
                     $score += 1; $matchedTags[] = $activity; break;
                 }
             }
@@ -134,7 +168,7 @@ class RecommendationApiController extends Controller
         $programCats = array_map('strtolower', self::PROGRAM_MAP[$program ?? ''] ?? []);
         if (!empty($programCats)) {
             foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $programCats) || $this->partialMatch($orgCat, $programCats)) {
+                if (in_array($orgCat, $programCats, true)) {
                     $score += 1; break;
                 }
             }
@@ -143,31 +177,33 @@ class RecommendationApiController extends Controller
         return [$score, array_unique($matchedTags)];
     }
 
-    private function partialMatch(string $category, array $cats): bool
+    private function formatOrgAI(Organization $org, int $matchPct, string $matchReason): array
     {
-        foreach ($cats as $c) {
-            if (str_contains($category, $c) || str_contains($c, $category)) {
-                return true;
-            }
-        }
-        return false;
+        return [
+            'id'           => $org->id,
+            'name'         => $org->org_name,
+            'category'     => $org->category,
+            'president'    => $org->president,
+            'mission'      => $org->mission,
+            'logo'         => $org->logo ? url('storage/' . $org->logo) : null,
+            'is_recruiting'=> $org->is_recruiting,
+            'match_pct'    => $matchPct,
+            'match_reason' => $matchReason,
+            'match_tags'   => [],
+        ];
     }
 
-    private function formatOrg(array $item): array
+    private function formatOrg(array $item, int $maxScore): array
     {
-        $org  = $item['org'];
-        $tags = array_values($item['matchedTags']);
+        $org   = $item['org'];
+        $tags  = array_values($item['matchedTags']);
         $score = $item['score'];
 
-        // Build match reason from tags
-        if (!empty($tags)) {
-            $reason = 'Matches your ' . implode(', ', array_slice($tags, 0, 3));
-        } else {
-            $reason = 'Explore this organization';
-        }
+        $reason = !empty($tags)
+            ? 'Matches your ' . implode(', ', array_slice($tags, 0, 3))
+            : 'Explore this organization';
 
-        // Match percentage capped at 100 (max possible = 3*3 + 3*2 + 3*1 + 1 = 16)
-        $matchPct = min(100, (int) round(($score / 16) * 100));
+        $matchPct = (int) round(($score / $maxScore) * 100);
 
         return [
             'id'           => $org->id,
@@ -176,6 +212,7 @@ class RecommendationApiController extends Controller
             'president'    => $org->president,
             'mission'      => $org->mission,
             'logo'         => $org->logo ? url('storage/' . $org->logo) : null,
+            'is_recruiting'=> $org->is_recruiting,
             'score'        => $score,
             'match_pct'    => $matchPct,
             'match_reason' => $reason,

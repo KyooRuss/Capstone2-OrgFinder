@@ -37,7 +37,7 @@ body {
 .brand {
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 2px;
     margin-bottom: 6px;
     justify-content: center;
 }

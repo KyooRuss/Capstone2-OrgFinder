@@ -94,28 +94,30 @@ export default function OrgDetailScreen({ route, navigation }) {
                                     <Text style={styles.heroPresident}>President: {org.president}</Text>
                                 ) : null}
 
-                                {/* Recruiting badge + Join button */}
+                                {/* Recruiting badge + Join button (students only) */}
                                 {org.is_recruiting && (
                                     <View style={styles.recruitRow}>
                                         <View style={styles.recruitBadge}>
                                             <Text style={styles.recruitBadgeText}>Now Recruiting</Text>
                                         </View>
-                                        {org.my_request_status === 'pending' ? (
-                                            <View style={styles.joinSentBtn}>
-                                                <Text style={styles.joinSentText}>Application Sent</Text>
-                                            </View>
-                                        ) : org.my_request_status === 'accepted' ? (
-                                            <View style={[styles.joinSentBtn, { backgroundColor: 'rgba(22,163,74,0.2)' }]}>
-                                                <Text style={[styles.joinSentText, { color: '#bbf7d0' }]}>Accepted</Text>
-                                            </View>
-                                        ) : org.my_request_status === 'declined' ? (
-                                            <View style={[styles.joinSentBtn, { backgroundColor: 'rgba(220,38,38,0.2)' }]}>
-                                                <Text style={[styles.joinSentText, { color: '#fca5a5' }]}>Declined</Text>
-                                            </View>
-                                        ) : (
-                                            <TouchableOpacity style={styles.joinBtn} onPress={() => setShowJoinModal(true)}>
-                                                <Text style={styles.joinBtnText}>Join</Text>
-                                            </TouchableOpacity>
+                                        {user?.role !== 'prof' && (
+                                            org.my_request_status === 'pending' ? (
+                                                <View style={styles.joinSentBtn}>
+                                                    <Text style={styles.joinSentText}>Application Sent</Text>
+                                                </View>
+                                            ) : org.my_request_status === 'accepted' ? (
+                                                <View style={[styles.joinSentBtn, { backgroundColor: 'rgba(22,163,74,0.2)' }]}>
+                                                    <Text style={[styles.joinSentText, { color: '#bbf7d0' }]}>Accepted</Text>
+                                                </View>
+                                            ) : org.my_request_status === 'declined' ? (
+                                                <View style={[styles.joinSentBtn, { backgroundColor: 'rgba(220,38,38,0.2)' }]}>
+                                                    <Text style={[styles.joinSentText, { color: '#fca5a5' }]}>Declined</Text>
+                                                </View>
+                                            ) : (
+                                                <TouchableOpacity style={styles.joinBtn} onPress={() => setShowJoinModal(true)}>
+                                                    <Text style={styles.joinBtnText}>Join</Text>
+                                                </TouchableOpacity>
+                                            )
                                         )}
                                     </View>
                                 )}

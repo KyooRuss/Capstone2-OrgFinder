@@ -11,7 +11,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check() && Auth::user()->isAdminOfficer()) {
-            return redirect()->route('admin-officer.events.index');
+            return redirect()->route('admin-officer.organization.index');
         }
 
         return view('admin-officer.auth.login');
@@ -38,7 +38,7 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
-            return redirect()->route('admin-officer.events.index');
+            return redirect()->route('admin-officer.organization.index');
         }
 
         return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');

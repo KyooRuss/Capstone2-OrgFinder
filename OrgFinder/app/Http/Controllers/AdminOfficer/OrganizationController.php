@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\AdminOfficer;
 
 use App\Http\Controllers\Controller;
+use App\Models\OrganizationAccess;
 use App\Models\OrganizationPhoto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +11,45 @@ use Illuminate\Support\Facades\Storage;
 
 class OrganizationController extends Controller
 {
+    private const POSITION_MAP = [
+        'organization president' => 'president',
+        'organization adviser'   => 'adviser',
+        'president'              => 'president',
+        'vice president'         => 'vice_president',
+        'vice_president'         => 'vice_president',
+        'secretary'              => 'secretary',
+        'adviser'                => 'adviser',
+        'officer'                => 'officer',
+        'member'                 => 'member',
+    ];
+
+    private const RESPONSIBILITIES = [
+        'president'      => 'Lead with integrity — set the vision, guide your team, and represent the organization with pride.',
+        'vice_president' => 'Support the President, coordinate officers, and step up whenever the organization needs you.',
+        'secretary'      => 'Keep records accurate, manage communications, and make sure nothing important slips through.',
+        'adviser'        => 'Guide and mentor members with wisdom, uphold standards, and bridge students and administration.',
+        'officer'        => 'Own your tasks, coordinate with your team, and deliver results that reflect well on the organization.',
+        'member'         => 'Participate actively, follow your leaders\' guidance, and uphold the values of your organization.',
+    ];
+
+    private const QUOTES = [
+        'Great things are built by people who show up every single day.',
+        'Your contribution matters — even the smallest effort drives the team forward.',
+        'Leadership is not a position. It is a choice to make a difference.',
+        'One step at a time. Consistency beats perfection every time.',
+        'The strength of the team is each individual member. The strength of each member is the team.',
+        'Discipline is the bridge between goals and accomplishment.',
+        'Show up, work hard, and inspire others to do the same.',
+        'Excellence is not a skill — it is an attitude.',
+        'Together, we can achieve what none of us could alone.',
+        'Your role in this organization is valuable. Never underestimate it.',
+        'Serve with purpose. Lead with heart. Act with integrity.',
+        'Be the reason your organization succeeds today.',
+        'Small acts of dedication create big moments of success.',
+        'Your organization needs the best version of you — give it freely.',
+        'True leaders lift others up as they rise.',
+    ];
+
     private function myOrganization()
     {
         return Auth::user()?->organizations()->first();
@@ -17,6 +57,7 @@ class OrganizationController extends Controller
 
     public function index()
     {
+        $user         = Auth::user();
         $organization = $this->myOrganization();
 
         $eventPosters = $organization
@@ -27,19 +68,27 @@ class OrganizationController extends Controller
                 ->get(['id', 'title', 'date', 'event_poster'])
             : collect();
 
-        $testimonials = $organization
-            ? $organization->testimonials
-            : collect();
+        $testimonials = $organization ? $organization->testimonials : collect();
+        $photos       = $organization ? $organization->photos       : collect();
+        $reasons      = $organization ? $organization->reasons      : collect();
 
-        $photos = $organization
-            ? $organization->photos
-            : collect();
+        $rawPosition = null;
+        $reminder    = null;
+        $quote       = null;
+        if ($organization) {
+            $rawPosition = OrganizationAccess::where('organization_id', $organization->id)
+                ->where('user_id', $user->id)
+                ->value('position');
+            $normalized = strtolower(trim($rawPosition ?? 'member'));
+            $posKey     = self::POSITION_MAP[$normalized] ?? 'member';
+            $reminder = self::RESPONSIBILITIES[$posKey];
+            $quote    = self::QUOTES[(int) date('j') % count(self::QUOTES)];
+        }
 
-        $reasons = $organization
-            ? $organization->reasons
-            : collect();
-
-        return view('admin-officer.organization.index', compact('organization', 'eventPosters', 'testimonials', 'photos', 'reasons'));
+        return view('admin-officer.organization.index', compact(
+            'organization', 'eventPosters', 'testimonials', 'photos', 'reasons',
+            'reminder', 'quote'
+        ));
     }
 
     public function edit()

@@ -11,10 +11,10 @@ import api from '../api/client';
 export default function EventDetailScreen({ route, navigation }) {
     const { id } = route.params;
     const { height } = useWindowDimensions();
-    const [event, setEvent]     = useState(null);
+    const [event, setEvent]   = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const sheetMaxHeight = Math.round(height * 0.68);
+    const sheetMaxHeight = Math.round(height * 0.78);
 
     useEffect(() => {
         api.get(`/events/${id}`)
@@ -122,6 +122,7 @@ export default function EventDetailScreen({ route, navigation }) {
                             ))}
                         </View>
                     ) : null}
+
                 </ScrollView>
             </View>
         </View>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
     FlatList, Image, ActivityIndicator, RefreshControl, Modal, ScrollView,
@@ -7,89 +7,113 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
 
+function buildRows(events) {
+    const myOrg = events.filter(e => e.is_my_org);
+    const other = events.filter(e => !e.is_my_org);
+    const rows = [];
+    if (myOrg.length > 0) {
+        rows.push({ type: 'header', key: 'h1', label: 'Your Organization' });
+        myOrg.forEach(e => rows.push({ type: 'event', key: `e${e.id}`, ...e }));
+    }
+    if (other.length > 0) {
+        rows.push({ type: 'header', key: 'h2', label: 'Other Organizations' });
+        other.forEach(e => rows.push({ type: 'event', key: `e${e.id}`, ...e }));
+    }
+    return rows;
+}
+
 export default function EventsScreen({ navigation }) {
+    const { user } = useContext(AuthContext);
+    const isProf = user?.role === 'prof';
     const { height } = useWindowDimensions();
     const headerSpacing = Math.round(height * 0.03);
 
-    const [events, setEvents]         = useState([]);
-    const [orgs, setOrgs]             = useState([]);
-    const [loading, setLoading]       = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [search, setSearch]         = useState('');
-    const [selectedOrg, setSelectedOrg] = useState(null); // { id, name }
+    const [rows, setRows]               = useState([]);
+    const [orgs, setOrgs]               = useState([]);
+    const [loading, setLoading]         = useState(true);
+    const [refreshing, setRefreshing]   = useState(false);
+    const [search, setSearch]           = useState('');
+    const [selectedOrg, setSelectedOrg] = useState(null);
     const [showOrgModal, setShowOrgModal] = useState(false);
+    const [department, setDepartment]   = useState('All'); // prof only: filter by department
+    const [showDeptModal, setShowDeptModal] = useState(false);
 
-    // Fetch org list once for the filter dropdown
+    // Fetch org list once for the filter dropdown (students)
     useEffect(() => {
-        api.get('/organizations').then(res => {
-            setOrgs(res.data.organizations.map(o => ({ id: o.id, name: o.name })));
-        }).catch(() => {});
-    }, []);
+        if (!isProf) {
+            api.get('/organizations').then(res => {
+                setOrgs(res.data.organizations.map(o => ({ id: o.id, name: o.name })));
+            }).catch(() => {});
+        }
+    }, [isProf]);
 
     const loadEvents = useCallback(async () => {
         try {
             const params = {};
             if (search.trim()) params.search = search.trim();
-            if (selectedOrg) params.org_id = selectedOrg.id;
+            if (!isProf && selectedOrg) params.org_id = selectedOrg.id;
+            if (isProf && department !== 'All') params.department = department;
             const res = await api.get('/events/upcoming', { params });
-            setEvents(res.data.events);
+            setRows(buildRows(res.data.events ?? []));
         } catch {}
         finally { setLoading(false); setRefreshing(false); }
-    }, [search, selectedOrg]);
+    }, [search, selectedOrg, department, isProf]);
 
-    useEffect(() => { setLoading(true); loadEvents(); }, [selectedOrg]);
+    useEffect(() => { setLoading(true); loadEvents(); }, [selectedOrg, department]);
 
-    const renderEvent = ({ item }) => (
-        <TouchableOpacity
-            style={styles.eventCard}
-            onPress={() => navigation.navigate('EventDetail', { id: item.id })}
-            activeOpacity={0.88}
-        >
-            {/* Square poster on the left */}
-            {item.poster
-                ? <Image source={{ uri: item.poster }} style={styles.poster} />
-                : <View style={styles.posterPlaceholder} />
-            }
+    const renderRow = ({ item }) => {
+        if (item.type === 'header') {
+            return <Text style={styles.sectionLabel}>{item.label}</Text>;
+        }
 
-            {/* Details on the right */}
-            <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle} numberOfLines={3}>{item.title}</Text>
-                <View style={styles.metaRow}>
-                    <Ionicons name="calendar-outline" size={13} color="#000000" />
-                    <Text style={styles.metaText}>{item.date}</Text>
+        return (
+            <TouchableOpacity
+                style={styles.eventCard}
+                onPress={() => navigation.navigate('EventDetail', { id: item.id })}
+                activeOpacity={0.88}
+            >
+                {item.poster
+                    ? <Image source={{ uri: item.poster }} style={styles.poster} />
+                    : <View style={styles.posterPlaceholder} />
+                }
+                <View style={styles.eventInfo}>
+                    <Text style={styles.orgTag} numberOfLines={1}>{item.organization?.name}</Text>
+                    <Text style={styles.eventTitle} numberOfLines={3}>{item.title}</Text>
+                    <View style={styles.metaRow}>
+                        <Ionicons name="calendar-outline" size={13} color="#000000" />
+                        <Text style={styles.metaText}>{item.date}</Text>
+                    </View>
+                    {item.time ? (
+                        <View style={styles.metaRow}>
+                            <Ionicons name="time-outline" size={13} color="#000000" />
+                            <Text style={styles.metaText}>{item.time}</Text>
+                        </View>
+                    ) : null}
+                    {item.venue ? (
+                        <View style={styles.metaRow}>
+                            <Ionicons name="location-outline" size={13} color="#000000" />
+                            <Text style={styles.metaText}>{item.venue}</Text>
+                        </View>
+                    ) : null}
+                    <TouchableOpacity
+                        style={styles.viewDetailsWrap}
+                        onPress={() => navigation.navigate('EventDetail', { id: item.id })}
+                    >
+                        <Text style={styles.viewDetailsLink}>View Details</Text>
+                    </TouchableOpacity>
                 </View>
-                {item.time ? (
-                    <View style={styles.metaRow}>
-                        <Ionicons name="time-outline" size={13} color="#000000" />
-                        <Text style={styles.metaText}>{item.time}</Text>
-                    </View>
-                ) : null}
-                {item.venue ? (
-                    <View style={styles.metaRow}>
-                        <Ionicons name="location-outline" size={13} color="#000000" />
-                        <Text style={styles.metaText}>{item.venue}</Text>
-                    </View>
-                ) : null}
-                <TouchableOpacity
-                    style={styles.viewDetailsWrap}
-                    onPress={() => navigation.navigate('EventDetail', { id: item.id })}
-                >
-                    <Text style={styles.viewDetailsLink}>View Details</Text>
-                </TouchableOpacity>
-            </View>
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={styles.root}>
             <LinearGradient colors={['#7CB9FF', '#4A6CF7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
                 <SafeAreaView>
                     <View style={[styles.headerRow, { marginBottom: headerSpacing }]}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                            <Text style={styles.backIcon}>‹</Text>
-                        </TouchableOpacity>
                         <Text style={styles.headerTitle}>Upcoming Events</Text>
                     </View>
                     <View style={styles.searchRow}>
@@ -105,14 +129,46 @@ export default function EventsScreen({ navigation }) {
                                 returnKeyType="search"
                             />
                         </View>
-                        <TouchableOpacity style={styles.filterBtn} onPress={() => setShowOrgModal(true)}>
-                            <Text style={styles.filterBtnText} numberOfLines={1}>
-                                {selectedOrg ? selectedOrg.name : 'Filter'} ▼
-                            </Text>
-                        </TouchableOpacity>
+                        {isProf ? (
+                            <TouchableOpacity
+                                style={[styles.filterBtn, department !== 'All' && styles.filterBtnActive]}
+                                onPress={() => setShowDeptModal(true)}
+                            >
+                                <Text style={[styles.filterBtnText, department !== 'All' && { color: '#fff' }]} numberOfLines={1}>
+                                    {department === 'All' ? 'Dept ▼' : department.replace('College of ', '') + ' ▼'}
+                                </Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={styles.filterBtn} onPress={() => setShowOrgModal(true)}>
+                                <Text style={styles.filterBtnText} numberOfLines={1}>
+                                    {selectedOrg ? selectedOrg.name : 'Filter'} ▼
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </SafeAreaView>
             </LinearGradient>
+
+            {/* Department filter modal (prof only) */}
+            <Modal visible={showDeptModal} transparent animationType="fade" onRequestClose={() => setShowDeptModal(false)}>
+                <TouchableOpacity style={[styles.modalOverlay, { paddingTop: Math.round(height * 0.15) }]} activeOpacity={1} onPress={() => setShowDeptModal(false)}>
+                    <View style={styles.modalBox}>
+                        <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                            {['All', 'College of Information Technology', 'College of Engineering', 'College of Nursing', 'College of Business Administration', 'College of Arts and Sciences', 'College of Education', 'College of Criminology'].map(dept => (
+                                <TouchableOpacity
+                                    key={dept}
+                                    style={[styles.modalItem, dept === department && styles.modalItemActive]}
+                                    onPress={() => { setDepartment(dept); setShowDeptModal(false); }}
+                                >
+                                    <Text style={[styles.modalItemText, dept === department && styles.modalItemTextActive]}>
+                                        {dept}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
 
             {/* Org filter modal */}
             <Modal visible={showOrgModal} transparent animationType="fade" onRequestClose={() => setShowOrgModal(false)}>
@@ -147,9 +203,9 @@ export default function EventsScreen({ navigation }) {
                 <ActivityIndicator style={{ marginTop: 60 }} color="#4A6CF7" size="large" />
             ) : (
                 <FlatList
-                    data={events}
-                    keyExtractor={item => String(item.id)}
-                    renderItem={renderEvent}
+                    data={rows}
+                    keyExtractor={item => item.key}
+                    renderItem={renderRow}
                     contentContainerStyle={styles.list}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
@@ -185,6 +241,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center',
         maxWidth: 110,
     },
+    filterBtnActive: { backgroundColor: '#4A6CF7' },
     filterBtnText: { fontSize: 12, fontWeight: '600', color: '#4A6CF7' },
 
     // Org modal
@@ -204,8 +261,19 @@ const styles = StyleSheet.create({
     modalItemText: { fontSize: 14, color: '#334155' },
     modalItemTextActive: { color: '#4A6CF7', fontWeight: '700' },
 
+    sectionLabel: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#94a3b8',
+        letterSpacing: 0.8,
+        textTransform: 'uppercase',
+        paddingHorizontal: 4,
+        paddingTop: 16,
+        paddingBottom: 8,
+    },
+
     // Cards
-    list: { padding: 16, gap: 14 },
+    list: { padding: 16, paddingBottom: 90, gap: 14 },
     eventCard: {
         backgroundColor: '#fff', borderRadius: 16,
         flexDirection: 'row', alignItems: 'stretch',
@@ -216,6 +284,7 @@ const styles = StyleSheet.create({
     poster: { width: 110, height: 130 },
     posterPlaceholder: { width: 110, height: 130, backgroundColor: '#dde4f0' },
     eventInfo: { flex: 1, padding: 12, justifyContent: 'space-between' },
+    orgTag: { fontSize: 11, fontWeight: '600', color: '#4A6CF7', marginBottom: 4 },
     eventTitle: { fontSize: 14, fontWeight: '700', color: '#0f2044', marginBottom: 8, lineHeight: 20 },
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
     metaText: { fontSize: 12, color: '#334155', flex: 1 },

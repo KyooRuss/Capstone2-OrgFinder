@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AdminOfficer;
 
 use App\Http\Controllers\Controller;
 use App\Models\MembershipRequest;
+use App\Models\Notification;
 use App\Models\OrganizationAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -65,6 +66,24 @@ class RecruitmentController extends Controller
                     'user_id'         => $membershipRequest->user_id,
                 ],
                 ['position' => 'Member']
+            );
+
+            Notification::send(
+                userId: $membershipRequest->user_id,
+                type:   'membership_accepted',
+                title:  'Membership Accepted',
+                body:   'Your application to ' . $org->org_name . ' has been accepted. Welcome!',
+                orgId:  $org->id,
+                data:   ['organization_id' => $org->id],
+            );
+        } else {
+            Notification::send(
+                userId: $membershipRequest->user_id,
+                type:   'membership_declined',
+                title:  'Membership Declined',
+                body:   'Your application to ' . $org->org_name . ' was not accepted at this time.',
+                orgId:  $org->id,
+                data:   ['organization_id' => $org->id],
             );
         }
 

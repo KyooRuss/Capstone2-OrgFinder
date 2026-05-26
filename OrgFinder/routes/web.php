@@ -5,6 +5,7 @@ use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\EventController;
 use App\Http\Controllers\SuperAdmin\AdminOfficerController;
 use App\Http\Controllers\SuperAdmin\StudentController;
+use App\Http\Controllers\SuperAdmin\ProfController;
 use App\Http\Controllers\SuperAdmin\TrashController;
 use App\Http\Controllers\AdminOfficer\AuthController as AdminOfficerAuthController;
 use App\Http\Controllers\AdminOfficer\OrganizationController as AdminOfficerOrgController;
@@ -13,6 +14,8 @@ use App\Http\Controllers\AdminOfficer\MemberController;
 use App\Http\Controllers\AdminOfficer\RecruitmentController;
 use App\Http\Controllers\AdminOfficer\TrashController as AdminOfficerTrashController;
 use App\Http\Controllers\AdminOfficer\ChatController as AdminOfficerChatController;
+use App\Http\Controllers\AdminOfficer\AnnouncementController;
+use App\Http\Controllers\AdminOfficer\DashboardController as AdminOfficerDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('super-admin.login'));
@@ -68,6 +71,15 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
             Route::delete('/{user}', [StudentController::class, 'destroy'])->name('destroy');
         });
 
+        // Professors
+        Route::prefix('profs')->name('profs.')->group(function () {
+            Route::get('/', [ProfController::class, 'index'])->name('index');
+            Route::post('/', [ProfController::class, 'store'])->name('store');
+            Route::post('/{user}/block', [ProfController::class, 'block'])->name('block');
+            Route::post('/{user}/unblock', [ProfController::class, 'unblock'])->name('unblock');
+            Route::delete('/{user}', [ProfController::class, 'destroy'])->name('destroy');
+        });
+
         // Trash
         Route::prefix('trash')->name('trash.')->group(function () {
             Route::get('/organizations', [TrashController::class, 'organizations'])->name('organizations');
@@ -97,6 +109,9 @@ Route::prefix('admin-officer')->name('admin-officer.')->group(function () {
 
     // Protected routes
     Route::middleware(\App\Http\Middleware\AdminOfficerMiddleware::class)->group(function () {
+
+        // Dashboard
+        Route::get('/dashboard', [AdminOfficerDashboardController::class, 'index'])->name('dashboard');
 
         // Organization profile
         Route::get('/organization', [AdminOfficerOrgController::class, 'index'])->name('organization.index');
@@ -134,6 +149,13 @@ Route::prefix('admin-officer')->name('admin-officer.')->group(function () {
             Route::get('/members', [AdminOfficerTrashController::class, 'members'])->name('members');
             Route::post('/users/{user}/restore', [AdminOfficerTrashController::class, 'restoreUser'])->name('users.restore');
             Route::delete('/users/{user}', [AdminOfficerTrashController::class, 'forceDeleteUser'])->name('users.force-delete');
+        });
+
+        // Announcements
+        Route::prefix('announcements')->name('announcements.')->group(function () {
+            Route::get('/', [AnnouncementController::class, 'index'])->name('index');
+            Route::post('/', [AnnouncementController::class, 'store'])->name('store');
+            Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
         });
 
         // Group Chat

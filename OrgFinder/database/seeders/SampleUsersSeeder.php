@@ -18,6 +18,11 @@ class SampleUsersSeeder extends Seeder
             ['email' => 'student5@orgfinder.com', 'password' => 'password'],
             ['email' => 'student6@orgfinder.com', 'password' => 'password'],
             ['email' => 'student7@orgfinder.com', 'password' => 'password'],
+            ['email' => 'student11@orgfinder.com', 'password' => 'password'],
+            ['email' => 'student12@orgfinder.com', 'password' => 'password'],
+            ['email' => 'student13@orgfinder.com', 'password' => 'password'],
+            ['email' => 'student14@orgfinder.com', 'password' => 'password'],
+            ['email' => 'student15@orgfinder.com', 'password' => 'password'],
         ];
 
         foreach ($users as $user) {

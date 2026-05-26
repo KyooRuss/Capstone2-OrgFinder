@@ -7,6 +7,15 @@
 @section('content')
 @if($organization)
 
+{{-- Daily Reminder --}}
+@if($reminder)
+<div style="background:#fff;border-radius:14px;padding:18px 20px;margin-bottom:20px;border-left:5px solid #4361EE;box-shadow:0 2px 10px rgba(67,97,238,0.08);">
+    <p style="font-size:13.5px;color:#334155;line-height:1.7;margin:0 0 12px;">{{ $reminder }}</p>
+    <div style="height:1px;background:#e2e8f0;margin-bottom:12px;"></div>
+    <span style="font-size:12px;color:#64748b;font-style:italic;line-height:1.6;">"{{ $quote }}"</span>
+</div>
+@endif
+
 {{-- Edit Profile button --}}
 <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
     <a href="{{ route('admin-officer.organization.edit') }}"

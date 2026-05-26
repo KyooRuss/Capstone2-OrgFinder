@@ -48,8 +48,9 @@ class OrganizationController extends Controller
             'reasons.*'         => ['nullable', 'string'],
             'testimonials'      => ['nullable', 'array'],
             'testimonials.*'    => ['nullable', 'string'],
-            'eligible_programs' => ['nullable', 'array'],
+            'eligible_programs'   => ['nullable', 'array'],
             'eligible_programs.*' => ['string'],
+            'department'          => ['nullable', 'string', 'max:255'],
         ]);
 
         $logoPath = null;
@@ -67,6 +68,7 @@ class OrganizationController extends Controller
             'contact_facebook'  => $validated['contact_facebook'] ?? null,
             'logo'              => $logoPath,
             'eligible_programs' => $validated['eligible_programs'] ?? null,
+            'department'        => $validated['department'] ?? null,
         ]);
 
         if ($request->hasFile('photos')) {
@@ -122,8 +124,9 @@ class OrganizationController extends Controller
             'reasons.*'         => ['nullable', 'string'],
             'testimonials'      => ['nullable', 'array'],
             'testimonials.*'    => ['nullable', 'string'],
-            'eligible_programs' => ['nullable', 'array'],
+            'eligible_programs'   => ['nullable', 'array'],
             'eligible_programs.*' => ['string'],
+            'department'          => ['nullable', 'string', 'max:255'],
         ]);
 
         $logoPath = $organization->logo;
@@ -142,6 +145,7 @@ class OrganizationController extends Controller
             'contact_facebook'  => $validated['contact_facebook'] ?? null,
             'logo'              => $logoPath,
             'eligible_programs' => $validated['eligible_programs'] ?? null,
+            'department'        => $validated['department'] ?? null,
         ]);
 
         // Replace reasons

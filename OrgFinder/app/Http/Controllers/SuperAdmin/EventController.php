@@ -4,6 +4,8 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class EventController extends Controller
@@ -71,6 +73,23 @@ class EventController extends Controller
     public function approve(Event $event)
     {
         $event->update(['status' => 'approved']);
+
+        // Notify every mobile user (student + prof) — org members see it under "Your Organization", others under "Other Organizations"
+        $orgName = $event->organization->org_name ?? 'An organization';
+        $allMobileUserIds = User::whereIn('role', ['student', 'prof'])
+            ->where('status', 'active')
+            ->pluck('id');
+
+        foreach ($allMobileUserIds as $uid) {
+            Notification::send(
+                userId: $uid,
+                type:   'event_posted',
+                title:  $orgName . ' added a new event',
+                body:   '"' . $event->title . '" is happening on ' . $event->date->format('M j, Y') . ($event->venue ? ' at ' . $event->venue : '') . '.',
+                orgId:  $event->organization_id,
+                data:   ['event_id' => $event->id],
+            );
+        }
 
         return response()->json(['message' => 'Event approved successfully.']);
     }

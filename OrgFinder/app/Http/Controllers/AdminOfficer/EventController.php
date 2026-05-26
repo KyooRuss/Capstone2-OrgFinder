@@ -55,6 +55,7 @@ class EventController extends Controller
             'time_raw'    => $event->time,
             'venue'       => $event->venue,
             'status'      => $event->status,
+            'visibility'  => $event->visibility ?? 'general',
             'image_url'   => $event->event_poster ? asset('storage/' . $event->event_poster) : null,
             'benefits'    => $event->benefits->pluck('benefit')->implode("\n"),
         ]);
@@ -75,6 +76,7 @@ class EventController extends Controller
             'venue'       => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'benefits'    => ['nullable', 'string'],
+            'visibility'  => ['nullable', 'in:general,members_only'],
             'image'       => ['nullable', 'image', 'max:4096'],
         ]);
 
@@ -91,6 +93,7 @@ class EventController extends Controller
             'venue'           => $data['venue'] ?? null,
             'description'     => $data['description'] ?? null,
             'event_poster'    => $posterPath,
+            'visibility'      => $data['visibility'] ?? 'general',
             'status'          => 'pending',
         ]);
 
@@ -118,6 +121,7 @@ class EventController extends Controller
             'venue'       => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'benefits'    => ['nullable', 'string'],
+            'visibility'  => ['nullable', 'in:general,members_only'],
             'image'       => ['nullable', 'image', 'max:4096'],
         ]);
 
@@ -134,6 +138,7 @@ class EventController extends Controller
             'venue'        => $data['venue'] ?? null,
             'description'  => $data['description'] ?? null,
             'event_poster' => $posterPath,
+            'visibility'   => $data['visibility'] ?? 'general',
         ]);
 
         $event->benefits()->delete();

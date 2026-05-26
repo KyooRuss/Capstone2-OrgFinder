@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -30,7 +29,7 @@ class AuthApiController extends Controller
             return response()->json(['message' => 'Your account has been blocked.'], 403);
         }
 
-        if (!$user->isStudent()) {
+        if (!$user->isMobileUser()) {
             return response()->json(['message' => 'Access denied.'], 403);
         }
 
@@ -55,16 +54,18 @@ class AuthApiController extends Controller
         return response()->json(['user' => $this->userResource($user)]);
     }
 
-    private function userResource(User $user): array
+    public static function userResource(User $user): array
     {
         $profile = $user->profile;
 
         return [
             'id'                => $user->id,
+            'role'              => $user->role,
             'first_name'        => $user->first_name,
             'last_name'         => $user->last_name,
             'email'             => $user->email,
             'student_number'    => $user->student_number,
+            'department'        => $profile?->department,
             'year_level'        => $profile?->year_level,
             'program'           => $profile?->program,
             'interests'         => $profile?->interest ?? [],

@@ -42,6 +42,7 @@
                     <th>Date</th>
                     <th>Time</th>
                     <th>Venue</th>
+                    <th style="text-align:center">Visibility</th>
                     <th style="text-align:center">Status</th>
                     <th style="text-align:center">Action</th>
                 </tr>
@@ -55,10 +56,17 @@
                     <td>{{ $event->time ? date('g:i A', strtotime($event->time)) : '—' }}</td>
                     <td>{{ $event->venue }}</td>
                     <td style="text-align:center">
+                        @if(($event->visibility ?? 'general') === 'members_only')
+                            <span style="background:#fff7ed;color:#c2410c;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">Org Only</span>
+                        @else
+                            <span style="background:#f0fdf4;color:#15803d;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">General</span>
+                        @endif
+                    </td>
+                    <td style="text-align:center">
                         <span class="status-{{ $event->status }}">{{ ucfirst($event->status) }}</span>
                     </td>
                     <td style="text-align:center">
-                        <button class="btn btn-dark btn-sm-pill" onclick="viewEvent({{ $event->id }})">View Details</button>
+                        <button class="btn btn-dark btn-sm-pill" onclick="viewEvent({{ $event->id }})">View</button>
                         <button class="btn btn-sm-pill" style="background:#f1f5f9;color:#475569;margin-left:6px;" onclick="editEvent({{ $event->id }})">Edit</button>
                     </td>
                 </tr>
@@ -144,6 +152,21 @@
                     <div class="form-group">
                         <textarea name="benefits" class="form-control" rows="3" placeholder="What you will gain (one per line)" style="resize:none;"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Visibility</label>
+                        <div style="display:flex;gap:10px;">
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#334155;">
+                                <input type="radio" name="visibility" value="general" checked style="accent-color:#4A6CF7;">
+                                <span>General</span>
+                                <span style="font-size:11px;font-weight:400;color:#94a3b8;margin-left:2px;">Everyone</span>
+                            </label>
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#334155;">
+                                <input type="radio" name="visibility" value="members_only" style="accent-color:#4A6CF7;">
+                                <span>Org Only</span>
+                                <span style="font-size:11px;font-weight:400;color:#94a3b8;margin-left:2px;">Members</span>
+                            </label>
+                        </div>
+                    </div>
                     <div id="createEventError" style="color:#ef4444;font-size:12px;margin-bottom:8px;display:none;"></div>
                     <div style="text-align:right;">
                         <button type="submit" class="btn btn-primary">Submit</button>
@@ -187,6 +210,21 @@
                     </div>
                     <div class="form-group">
                         <textarea id="editBenefits" name="benefits" class="form-control" rows="3" placeholder="What you will gain (one per line)" style="resize:none;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Visibility</label>
+                        <div style="display:flex;gap:10px;">
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#334155;">
+                                <input type="radio" id="editVisibilityGeneral" name="visibility" value="general" style="accent-color:#4A6CF7;">
+                                <span>General</span>
+                                <span style="font-size:11px;font-weight:400;color:#94a3b8;margin-left:2px;">Everyone</span>
+                            </label>
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#334155;">
+                                <input type="radio" id="editVisibilityMembersOnly" name="visibility" value="members_only" style="accent-color:#4A6CF7;">
+                                <span>Org Only</span>
+                                <span style="font-size:11px;font-weight:400;color:#94a3b8;margin-left:2px;">Members</span>
+                            </label>
+                        </div>
                     </div>
                     <div id="editEventError" style="color:#ef4444;font-size:12px;margin-bottom:8px;display:none;"></div>
                     <div style="text-align:right;">
@@ -268,6 +306,8 @@ function editEvent(id) {
             document.getElementById('editVenue').value = data.venue || '';
             document.getElementById('editDescription').value = data.description || '';
             document.getElementById('editBenefits').value = data.benefits || '';
+            document.getElementById('editVisibilityGeneral').checked = (data.visibility !== 'members_only');
+            document.getElementById('editVisibilityMembersOnly').checked = (data.visibility === 'members_only');
             selectedEditImageFile = null;
             const box = document.getElementById('editUploadBox');
             box.innerHTML = data.image_url

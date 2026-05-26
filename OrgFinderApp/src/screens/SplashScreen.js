@@ -24,7 +24,7 @@ export default function SplashScreen() {
                     style={{ width: logoSize, height: logoSize, marginBottom: 16 }}
                     resizeMode="contain"
                 />
-                <Text style={[styles.title, { fontSize: titleSize }]}>ORGFINDER</Text>
+                <Text style={[styles.title, { fontSize: titleSize }]}>NEUORG</Text>
             </Animated.View>
         </View>
     );
