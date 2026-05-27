@@ -9,53 +9,175 @@ use Illuminate\Http\Request;
 
 class RecommendationApiController extends Controller
 {
-    // Weighted: interests = 3pts, skills = 2pts, activities = 1pt per match
-    private const INTEREST_MAP = [
-        'Technology'              => ['Technology', 'Information Technology', 'Programming', 'Software Development', 'Systems & Networking', 'Information Systems', 'Business & Technology Integration', 'Research', 'Innovation', 'Academic Organization'],
-        'Programming'             => ['Programming', 'Software Development', 'Technology', 'Information Technology', 'Systems & Networking', 'Academic Organization'],
-        'Networking'              => ['Systems & Networking', 'Information Technology', 'Technology', 'Information Systems'],
-        'Arts'                    => ['Arts & Design', 'Creative', 'Creative Services', 'Multimedia', 'Performing Arts', 'Photography', 'Photo & Video Editing', 'Media Production', 'Entertainment', 'Dancing', 'Choreography', 'Sign Language', 'Non-Academic'],
-        'Gaming'                  => ['Gaming', 'E-Sports', 'Competition', 'Team Strategy', 'Entertainment'],
-        'Design'                  => ['Arts & Design', 'Creative', 'Creative Services', 'Multimedia', 'Photography', 'Photo & Video Editing'],
-        'Animation'               => ['Multimedia', 'Creative Services', 'Arts & Design', 'Creative', 'Media Production', 'Recording & Production', 'Audio & Audiovisual Media'],
-        'Music'                   => ['Music Publishing', 'Singing', 'Music Collaboration', 'Recording & Production', 'Performing Arts', 'Audio & Audiovisual Media', 'Entertainment', 'Creative Services', 'Media Production'],
-        'Dancing'                 => ['Dancing', 'Choreography', 'Performing Arts', 'Entertainment', 'Creative', 'Arts & Design'],
-        'Cyber Security'          => ['Information Technology', 'Systems & Networking', 'Technology', 'Information Systems'],
-        'Artificial Intelligence' => ['Technology', 'Research', 'Information Technology', 'Academic Organization', 'Innovation'],
-        'Analytics'               => ['Research', 'Academic Organization', 'Technology', 'Information Technology'],
-        'Machine Learning'        => ['Technology', 'Research', 'Academic Organization', 'Innovation'],
-        'Innovation'              => ['Innovation', 'Research', 'Technology', 'Business & Technology Integration', 'Academic Organization'],
-        'Leadership'              => ['Leadership', 'Communication', 'Service', 'Community', 'Discipline', 'Academic Organization', 'Educational', 'Sign Language', 'Mental First Aid', 'Non-Academic'],
-        'Sports'                  => ['Competition', 'Team Strategy', 'E-Sports', 'Gaming', 'Service', 'Discipline'],
-    ];
-
-    private const SKILL_MAP = [
-        'Public Speaking'    => ['Leadership', 'Communication', 'Educational', 'Academic Organization', 'Service', 'Community', 'Guidance & Counseling', 'Sign Language', 'Mental First Aid'],
-        'Leadership'         => ['Leadership', 'Service', 'Community', 'Discipline', 'Academic Organization', 'Educational', 'Mental First Aid'],
-        'Project Management' => ['Leadership', 'Service', 'Business & Technology Integration', 'Academic Organization', 'Community'],
-        'Arts'               => ['Arts & Design', 'Creative', 'Creative Services', 'Multimedia', 'Performing Arts', 'Photography', 'Photo & Video Editing'],
-        'Programming'        => ['Programming', 'Software Development', 'Technology', 'Information Technology', 'Systems & Networking'],
-        'Cybersecurity'      => ['Information Technology', 'Systems & Networking', 'Technology'],
-        'UI/UX Design'       => ['Creative', 'Arts & Design', 'Creative Services', 'Multimedia', 'Technology'],
-        'Graphic Design'     => ['Arts & Design', 'Creative', 'Multimedia', 'Creative Services', 'Photography', 'Photo & Video Editing'],
-    ];
-
-    private const ACTIVITY_MAP = [
-        'Training'    => ['Educational', 'Leadership', 'Service', 'Community', 'Academic Organization', 'Discipline', 'Guidance & Counseling', 'Mental First Aid', 'Sign Language'],
-        'Forum'       => ['Communication', 'Leadership', 'Educational', 'Community', 'Academic Organization', 'Mental Health', 'Mental First Aid'],
-        'Seminar'     => ['Educational', 'Academic Organization', 'Leadership', 'Community', 'Mental Health', 'Guidance & Counseling', 'Mental First Aid'],
-        'Competition' => ['Competition', 'E-Sports', 'Gaming', 'Team Strategy', 'Academic Organization'],
-        'E-sports'    => ['E-Sports', 'Gaming', 'Competition', 'Team Strategy', 'Entertainment'],
-        'Workshop'    => ['Educational', 'Creative', 'Arts & Design', 'Technology', 'Creative Services', 'Multimedia', 'Recording & Production', 'Photography', 'Media Production'],
-        'Hackathons'  => ['Programming', 'Software Development', 'Technology', 'Information Technology', 'Competition', 'Team Strategy', 'Innovation', 'Academic Organization'],
-    ];
-
-    // Program → likely categories for bonus matching
-    private const PROGRAM_MAP = [
-        'BSIT'  => ['Information Technology', 'Technology', 'Programming', 'Systems & Networking', 'Information Systems', 'Academic Organization'],
-        'BSCS'  => ['Programming', 'Software Development', 'Technology', 'Information Technology', 'Research', 'Academic Organization'],
-        'BSIS'  => ['Information Systems', 'Information Technology', 'Business & Technology Integration', 'Technology'],
-        'BSCpE' => ['Technology', 'Systems & Networking', 'Information Technology', 'Research', 'Academic Organization'],
+    // Each preference maps to exact (1.0) and related (0.7) org categories
+    // Keys must match exactly what ProfileAssessmentScreen sends
+    private const MATCH_MAP = [
+        'interest' => [
+            'Technology' => [
+                'exact'   => ['Technology', 'Information Technology'],
+                'related' => ['Programming', 'Software Development', 'Innovation', 'Research', 'Academic Org', 'Systems & Networking', 'Business & Technology Integration'],
+            ],
+            'Programming' => [
+                'exact'   => ['Programming', 'Software Development'],
+                'related' => ['Technology', 'Information Technology', 'Systems & Networking', 'Academic Org'],
+            ],
+            'Networking' => [
+                'exact'   => ['Systems & Networking'],
+                'related' => ['Information Technology', 'Technology', 'Information Systems'],
+            ],
+            'Arts' => [
+                'exact'   => ['Arts & Design', 'Arts and Design', 'Creative'],
+                'related' => ['Multimedia', 'Performing Arts', 'Photography', 'Creative Services', 'Media Production', 'Entertainment', 'Non-Academic'],
+            ],
+            'Leadership' => [
+                'exact'   => ['Leadership', 'Communication', 'Service', 'Discipline'],
+                'related' => ['Community', 'Academic Org', 'Educational', 'Sign Language', 'Non-Academic'],
+            ],
+            'Research' => [
+                'exact'   => ['Research', 'Innovation'],
+                'related' => ['Technology', 'Academic Org', 'Information Technology', 'Educational'],
+            ],
+            'Dancing' => [
+                'exact'   => ['Dancing', 'Choreography'],
+                'related' => ['Performing Arts', 'Entertainment', 'Creative', 'Arts & Design', 'Singing'],
+            ],
+            'Photography' => [
+                'exact'   => ['Photography', 'Photo & Video Editing', 'Photo and Video Editing'],
+                'related' => ['Arts & Design', 'Creative Services', 'Multimedia', 'Entertainment', 'Media Production'],
+            ],
+            'Gaming' => [
+                'exact'   => ['Gaming', 'E-Sports', 'E-Sport'],
+                'related' => ['Competition', 'Team Strategy', 'Entertainment'],
+            ],
+            'Sign Language' => [
+                'exact'   => ['Sign Language'],
+                'related' => ['Community', 'Educational', 'Communication', 'Non-Academic'],
+            ],
+            'Photo Video Editing' => [
+                'exact'   => ['Photo & Video Editing', 'Photo and Video Editing', 'Photography'],
+                'related' => ['Multimedia', 'Creative Services', 'Arts & Design', 'Media Production'],
+            ],
+            'Singing' => [
+                'exact'   => ['Singing', 'Music Publishing', 'Music Collaboration'],
+                'related' => ['Recording & Production', 'Performing Arts', 'Audio & Audiovisual Media', 'Audio and Audiovisual Media', 'Entertainment', 'Creative Services'],
+            ],
+            'Mental First Aid' => [
+                'exact'   => ['Mental First Aid', 'Mental Health', 'Guidance & Counseling'],
+                'related' => ['Community', 'Educational', 'Service', 'Communication'],
+            ],
+            'Acting' => [
+                'exact'   => ['Performing Arts'],
+                'related' => ['Entertainment', 'Creative Services', 'Arts & Design', 'Media Production', 'Creative'],
+            ],
+            'Innovation' => [
+                'exact'   => ['Innovation', 'Research'],
+                'related' => ['Technology', 'Business & Technology Integration', 'Academic Org'],
+            ],
+            'Recording Production' => [
+                'exact'   => ['Recording & Production', 'Audio & Audiovisual Media', 'Audio and Audiovisual Media'],
+                'related' => ['Music Publishing', 'Performing Arts', 'Creative Services', 'Media Production', 'Entertainment'],
+            ],
+            'Music Publishing' => [
+                'exact'   => ['Music Publishing', 'Music Collaboration', 'Singing'],
+                'related' => ['Recording & Production', 'Performing Arts', 'Audio & Audiovisual Media', 'Creative Services', 'Entertainment'],
+            ],
+        ],
+        'skill' => [
+            'Programming' => [
+                'exact'   => ['Programming', 'Software Development'],
+                'related' => ['Technology', 'Information Technology', 'Systems & Networking'],
+            ],
+            'Sign Language Fluency' => [
+                'exact'   => ['Sign Language'],
+                'related' => ['Community', 'Educational', 'Communication', 'Non-Academic'],
+            ],
+            'Singing' => [
+                'exact'   => ['Singing', 'Music Publishing', 'Music Collaboration'],
+                'related' => ['Recording & Production', 'Performing Arts', 'Audio & Audiovisual Media', 'Entertainment'],
+            ],
+            'Leadership' => [
+                'exact'   => ['Leadership', 'Discipline'],
+                'related' => ['Service', 'Community', 'Academic Org', 'Educational', 'Mental First Aid', 'Communication'],
+            ],
+            'Voice Acting' => [
+                'exact'   => ['Performing Arts'],
+                'related' => ['Entertainment', 'Creative Services', 'Arts & Design', 'Media Production', 'Creative'],
+            ],
+            'Research Writing' => [
+                'exact'   => ['Research'],
+                'related' => ['Academic Org', 'Educational', 'Leadership', 'Innovation'],
+            ],
+            'Public Speaking' => [
+                'exact'   => ['Communication', 'Leadership'],
+                'related' => ['Educational', 'Academic Org', 'Service', 'Community', 'Sign Language', 'Mental First Aid', 'Guidance & Counseling'],
+            ],
+            'Music Production' => [
+                'exact'   => ['Recording & Production', 'Audio & Audiovisual Media', 'Audio and Audiovisual Media'],
+                'related' => ['Music Publishing', 'Performing Arts', 'Creative Services', 'Entertainment'],
+            ],
+            'Stage Performance' => [
+                'exact'   => ['Performing Arts'],
+                'related' => ['Dancing', 'Choreography', 'Singing', 'Entertainment', 'Creative Services'],
+            ],
+            'Strategic Gaming' => [
+                'exact'   => ['Gaming', 'E-Sports', 'E-Sport'],
+                'related' => ['Competition', 'Team Strategy', 'Entertainment'],
+            ],
+            'Event Planning' => [
+                'exact'   => ['Leadership', 'Service'],
+                'related' => ['Community', 'Academic Org', 'Educational', 'Communication'],
+            ],
+            'Dancing' => [
+                'exact'   => ['Dancing', 'Choreography'],
+                'related' => ['Performing Arts', 'Entertainment', 'Creative', 'Arts & Design'],
+            ],
+        ],
+        'activity' => [
+            'Competition' => [
+                'exact'   => ['Competition', 'E-Sports', 'E-Sport'],
+                'related' => ['Gaming', 'Team Strategy', 'Academic Org'],
+            ],
+            'E-Sports Tournament' => [
+                'exact'   => ['E-Sports', 'E-Sport', 'Gaming'],
+                'related' => ['Competition', 'Team Strategy', 'Entertainment'],
+            ],
+            'Training' => [
+                'exact'   => ['Educational', 'Leadership'],
+                'related' => ['Service', 'Community', 'Academic Org', 'Discipline', 'Mental First Aid', 'Sign Language'],
+            ],
+            'Seminar' => [
+                'exact'   => ['Educational', 'Academic Org'],
+                'related' => ['Leadership', 'Community', 'Mental Health', 'Guidance & Counseling', 'Mental First Aid'],
+            ],
+            'Peer Counseling' => [
+                'exact'   => ['Mental Health', 'Guidance & Counseling', 'Mental First Aid'],
+                'related' => ['Community', 'Educational', 'Service', 'Communication'],
+            ],
+            'Public Speaking Event' => [
+                'exact'   => ['Communication', 'Leadership'],
+                'related' => ['Educational', 'Academic Org', 'Service', 'Community', 'Sign Language'],
+            ],
+            'Workshop' => [
+                'exact'   => ['Educational', 'Creative'],
+                'related' => ['Arts & Design', 'Technology', 'Creative Services', 'Multimedia', 'Recording & Production', 'Photography', 'Media Production'],
+            ],
+            'Tech Talk' => [
+                'exact'   => ['Technology', 'Innovation'],
+                'related' => ['Information Technology', 'Research', 'Programming', 'Academic Org'],
+            ],
+            'Theater Performance' => [
+                'exact'   => ['Performing Arts'],
+                'related' => ['Entertainment', 'Creative Services', 'Arts & Design', 'Dancing', 'Singing'],
+            ],
+            'Media Production' => [
+                'exact'   => ['Media Production', 'Recording & Production'],
+                'related' => ['Multimedia', 'Creative Services', 'Arts & Design', 'Entertainment', 'Photography'],
+            ],
+            'Forum' => [
+                'exact'   => ['Communication', 'Leadership'],
+                'related' => ['Educational', 'Community', 'Academic Org', 'Mental Health', 'Mental First Aid'],
+            ],
+        ],
     ];
 
     public function index(Request $request, GeminiEmbeddingService $gemini)
@@ -64,9 +186,9 @@ class RecommendationApiController extends Controller
         $user->loadMissing('profile');
 
         $userProgram    = $user->profile?->program;
-        $userInterests  = $user->profile?->interest ?? [];
-        $userSkills     = $user->profile?->skill_to_improve ?? [];
-        $userActivities = $user->profile?->preferred_activity ?? [];
+        $userInterests  = array_slice($user->profile?->interest ?? [], 0, 3);
+        $userSkills     = array_slice($user->profile?->skill_to_improve ?? [], 0, 3);
+        $userActivities = array_slice($user->profile?->preferred_activity ?? [], 0, 3);
 
         // Exclude orgs the user already belongs to
         $memberOrgIds = $user->organizations()->pluck('organizations.id')->flip()->toArray();
@@ -80,13 +202,13 @@ class RecommendationApiController extends Controller
             });
 
         // Build user profile text and ask Gemini to rank the orgs
-        $userText  = $gemini->userToText($userProgram, $userInterests, $userSkills, $userActivities);
-        $orgArray  = $orgs->values()->all();
-        $ranked    = $gemini->rankOrgs($orgArray, $userText);
+        $userText = $gemini->userToText($userProgram, $userInterests, $userSkills, $userActivities);
+        $orgArray = $orgs->values()->all();
+        $ranked   = $gemini->rankOrgs($orgArray, $userText);
 
-        // If Gemini is unavailable, fall back to keyword scoring
+        // If Gemini is unavailable, fall back to weighted formula scoring
         if (!$ranked) {
-            return $this->keywordFallback($orgs, $userInterests, $userSkills, $userActivities, $userProgram);
+            return $this->formulaFallback($orgs, $userInterests, $userSkills, $userActivities);
         }
 
         // Map Gemini's ranked IDs back to org models; only keep genuinely relevant results
@@ -94,129 +216,120 @@ class RecommendationApiController extends Controller
         $results = collect($ranked)
             ->filter(fn($r) => isset($orgById[$r['id']]) && ($r['match_pct'] ?? 0) >= 30)
             ->map(fn($r) => $this->formatOrgAI($orgById[$r['id']], $r['match_pct'], $r['match_reason']))
-            ->take(10)
+            ->take(4)
             ->values();
 
         return response()->json(['recommendations' => $results]);
     }
 
-    private function keywordFallback($orgs, array $interests, array $skills, array $activities, ?string $program)
+    // Weighted formula: Score = (0.5 × Ir/3) + (0.3 × Sr/3) + (0.2 × Ar/3)
+    private function formulaFallback($orgs, array $interests, array $skills, array $activities)
     {
-        $hasProgramBonus = !empty(self::PROGRAM_MAP[$program ?? '']);
-        $maxScore = max(1,
-            count($interests)  * 3 +
-            count($skills)     * 2 +
-            count($activities) * 1 +
-            ($hasProgramBonus ? 1 : 0)
-        );
+        $scored = $orgs->map(function ($org) use ($interests, $skills, $activities) {
+            $orgCategories = array_filter(array_map('strtolower', (array) ($org->category ?? [])));
 
-        $scored = $orgs->map(function ($org) use ($interests, $skills, $activities, $program) {
-            [$score, $matchedTags] = $this->scoreOrg($org, $interests, $skills, $activities, $program);
-            return ['org' => $org, 'score' => $score, 'matchedTags' => $matchedTags];
+            if (empty($orgCategories)) {
+                return ['org' => $org, 'match_pct' => 0, 'tags' => []];
+            }
+
+            [$Ir, $interestTags] = $this->componentScore($interests,  $orgCategories, 'interest');
+            [$Sr, $skillTags]    = $this->componentScore($skills,     $orgCategories, 'skill');
+            [$Ar, $activityTags] = $this->componentScore($activities, $orgCategories, 'activity');
+
+            $score    = (0.5 * ($Ir / 3)) + (0.3 * ($Sr / 3)) + (0.2 * ($Ar / 3));
+            $matchPct = (int) round($score * 100);
+            $tags     = array_unique(array_merge($interestTags, $skillTags, $activityTags));
+
+            return ['org' => $org, 'match_pct' => $matchPct, 'tags' => $tags];
         })
-        ->sort(function ($a, $b) {
-            if ($b['score'] !== $a['score']) return $b['score'] <=> $a['score'];
-            return ($b['org']->is_recruiting ? 1 : 0) <=> ($a['org']->is_recruiting ? 1 : 0);
-        })
+        ->filter(fn($i) => $i['match_pct'] >= 30)
+        ->sortByDesc('match_pct')
+        ->take(4)
         ->values();
 
-        $matched   = $scored->filter(fn($i) => $i['score'] > 0)->take(10)->values();
-        $displayed = $matched->isNotEmpty() ? $matched : $scored->take(10)->values();
-
         return response()->json([
-            'recommendations' => $displayed->map(fn($item) => $this->formatOrg($item, $maxScore)),
+            'recommendations' => $scored->map(fn($item) => $this->formatOrgFormula($item)),
         ]);
     }
 
-    private function scoreOrg(Organization $org, array $interests, array $skills, array $activities, ?string $program): array
+    // Normalize category strings: lowercase, & → and, trailing plurals for e-sport/s, academic org → academic organization
+    private function normalizeCategory(string $cat): string
     {
-        $score       = 0;
-        $matchedTags = [];
+        $c = strtolower(trim($cat));
+        $c = str_replace('&', 'and', $c);
+        $c = preg_replace('/\s+/', ' ', $c);
+        $c = str_replace('academic org', 'academic organization', $c);
+        $c = preg_replace('/\be-sport\b/', 'e-sports', $c);
+        return $c;
+    }
 
-        $orgCategories = array_map('strtolower', (array) ($org->category ?? []));
-        $orgCategories = array_filter($orgCategories);
+    // Returns [total_score, matched_tags] for one component (interest/skill/activity)
+    private function componentScore(array $preferences, array $orgCategories, string $type): array
+    {
+        $total          = 0.0;
+        $tags           = [];
+        $normalizedOrgs = array_map(fn($c) => $this->normalizeCategory($c), $orgCategories);
 
-        if (empty($orgCategories)) return [0, []];
+        foreach ($preferences as $pref) {
+            $map = self::MATCH_MAP[$type][$pref] ?? null;
+            if (!$map) continue;
 
-        foreach ($interests as $interest) {
-            $cats = array_map('strtolower', self::INTEREST_MAP[$interest] ?? []);
-            foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $cats, true)) {
-                    $score += 3; $matchedTags[] = $interest; break;
+            $exact   = array_map(fn($c) => $this->normalizeCategory($c), $map['exact']   ?? []);
+            $related = array_map(fn($c) => $this->normalizeCategory($c), $map['related'] ?? []);
+            $best    = 0.0;
+
+            foreach ($normalizedOrgs as $cat) {
+                if (in_array($cat, $exact, true)) {
+                    $best = 1.0; break;
+                }
+                if (in_array($cat, $related, true)) {
+                    $best = 0.7;
                 }
             }
+
+            $total += $best;
+            if ($best > 0) $tags[] = $pref;
         }
 
-        foreach ($skills as $skill) {
-            $cats = array_map('strtolower', self::SKILL_MAP[$skill] ?? []);
-            foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $cats, true)) {
-                    $score += 2; $matchedTags[] = $skill; break;
-                }
-            }
-        }
-
-        foreach ($activities as $activity) {
-            $cats = array_map('strtolower', self::ACTIVITY_MAP[$activity] ?? []);
-            foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $cats, true)) {
-                    $score += 1; $matchedTags[] = $activity; break;
-                }
-            }
-        }
-
-        $programCats = array_map('strtolower', self::PROGRAM_MAP[$program ?? ''] ?? []);
-        if (!empty($programCats)) {
-            foreach ($orgCategories as $orgCat) {
-                if (in_array($orgCat, $programCats, true)) {
-                    $score += 1; break;
-                }
-            }
-        }
-
-        return [$score, array_unique($matchedTags)];
+        return [$total, $tags];
     }
 
     private function formatOrgAI(Organization $org, int $matchPct, string $matchReason): array
     {
         return [
-            'id'           => $org->id,
-            'name'         => $org->org_name,
-            'category'     => $org->category,
-            'president'    => $org->president,
-            'mission'      => $org->mission,
-            'logo'         => $org->logo ? url('storage/' . $org->logo) : null,
-            'is_recruiting'=> $org->is_recruiting,
-            'match_pct'    => $matchPct,
-            'match_reason' => $matchReason,
-            'match_tags'   => [],
+            'id'            => $org->id,
+            'name'          => $org->org_name,
+            'category'      => $org->category,
+            'president'     => $org->president,
+            'mission'       => $org->mission,
+            'logo'          => $org->logo ? url('storage/' . $org->logo) : null,
+            'is_recruiting' => $org->is_recruiting,
+            'match_pct'     => $matchPct,
+            'match_reason'  => $matchReason,
+            'match_tags'    => [],
         ];
     }
 
-    private function formatOrg(array $item, int $maxScore): array
+    private function formatOrgFormula(array $item): array
     {
-        $org   = $item['org'];
-        $tags  = array_values($item['matchedTags']);
-        $score = $item['score'];
+        $org  = $item['org'];
+        $tags = array_values($item['tags']);
 
         $reason = !empty($tags)
             ? 'Matches your ' . implode(', ', array_slice($tags, 0, 3))
             : 'Explore this organization';
 
-        $matchPct = (int) round(($score / $maxScore) * 100);
-
         return [
-            'id'           => $org->id,
-            'name'         => $org->org_name,
-            'category'     => $org->category,
-            'president'    => $org->president,
-            'mission'      => $org->mission,
-            'logo'         => $org->logo ? url('storage/' . $org->logo) : null,
-            'is_recruiting'=> $org->is_recruiting,
-            'score'        => $score,
-            'match_pct'    => $matchPct,
-            'match_reason' => $reason,
-            'match_tags'   => $tags,
+            'id'            => $org->id,
+            'name'          => $org->org_name,
+            'category'      => $org->category,
+            'president'     => $org->president,
+            'mission'       => $org->mission,
+            'logo'          => $org->logo ? url('storage/' . $org->logo) : null,
+            'is_recruiting' => $org->is_recruiting,
+            'match_pct'     => $item['match_pct'],
+            'match_reason'  => $reason,
+            'match_tags'    => $tags,
         ];
     }
 }

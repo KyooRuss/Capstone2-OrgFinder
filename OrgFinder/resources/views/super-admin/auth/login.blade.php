@@ -10,7 +10,9 @@
     <div class="center-wrap">
         <div class="card">
             <div class="brand">
-                <img src="{{ asset('images/AppLogo.png') }}" alt="NEUORG Logo" style="height:60px;width:auto;object-fit:contain;display:block;">
+                <span class="brand-name">NEU</span>
+                <img src="{{ asset('images/AppLogo.png') }}" alt="NEUORG Logo" style="height:60px;width:auto;object-fit:contain;display:block;flex-shrink:0;margin-left:-20px;margin-right:-20px;">
+                <span class="brand-name">RG</span>
             </div>
             <p class="brand-sub">Manage and Track Student Organizations</p>
 

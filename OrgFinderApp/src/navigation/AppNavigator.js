@@ -88,6 +88,7 @@ function TabIcon({ iconName, focused, color, badge }) {
 }
 
 function useUnreadNotifs() {
+    const { refreshUser } = useContext(AuthContext);
     const [unreadNotifs, setUnreadNotifs] = useState(0);
 
     const fetchUnread = async () => {
@@ -101,7 +102,10 @@ function useUnreadNotifs() {
         fetchUnread();
         const interval = setInterval(fetchUnread, 60000);
         const sub = AppState.addEventListener('change', (state) => {
-            if (state === 'active') fetchUnread();
+            if (state === 'active') {
+                fetchUnread();
+                refreshUser().catch(() => {});
+            }
         });
         return () => { clearInterval(interval); sub.remove(); };
     }, []);

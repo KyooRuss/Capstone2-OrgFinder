@@ -297,15 +297,19 @@ function submitGrantAccess() {
         headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: selectedStudent.email, position })
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.message && !data.errors) {
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok) {
             closeGrantModal();
             loadAccess(currentOrgId, document.getElementById('accessModalTitle').textContent);
         } else {
             errEl.textContent = data.message || 'Something went wrong.';
             errEl.style.display = 'block';
         }
+    })
+    .catch(() => {
+        errEl.textContent = 'Request failed. Please try again.';
+        errEl.style.display = 'block';
     });
 }
 

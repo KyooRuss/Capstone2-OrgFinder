@@ -79,7 +79,7 @@ export default function HomeScreen({ navigation }) {
         finally { setLoading(false); setRefreshing(false); }
     }, [isProf]);
 
-    useEffect(() => { loadData(); }, []);
+    useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
     const loadUnread = useCallback(async () => {
         try {

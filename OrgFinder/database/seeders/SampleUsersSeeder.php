@@ -26,16 +26,22 @@ class SampleUsersSeeder extends Seeder
         ];
 
         foreach ($users as $user) {
-            User::updateOrCreate(
-                ['email' => $user['email']],
-                [
+            $existing = User::where('email', $user['email'])->first();
+            if ($existing) {
+                $existing->update([
+                    'password' => Hash::make($user['password']),
+                    'status'   => 'active',
+                ]);
+            } else {
+                User::create([
+                    'email'      => $user['email'],
                     'first_name' => '',
                     'last_name'  => '',
                     'password'   => Hash::make($user['password']),
                     'role'       => 'student',
                     'status'     => 'active',
-                ]
-            );
+                ]);
+            }
         }
     }
 }
